@@ -16,4 +16,14 @@ using Aqua
         @test textwidth("👍") == 2
         @test textwidth("👎🏼") == 4  # Ideally, this is also 2
     end
+
+    @testset "Indexing" begin
+        @test "abcdαβ👨🏻‍🌾γ"[7gr] == "👨🏻‍🌾"
+        @test "abcdαβ👨🏻‍🌾γ"[8gr] == "γ"
+        @test "abcdαβ👨🏻‍🌾γ"[1gr] == "a"
+        @test "abcd"[3cu] == UInt8('c')
+        @test "abcd"[1cu] == UInt8('a')
+        @test "abcd"[4cu] == UInt8('d')
+        @test_throws BoundsError "abcd"[5cu]
+    end
 end

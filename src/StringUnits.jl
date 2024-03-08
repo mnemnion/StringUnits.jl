@@ -11,13 +11,6 @@ Abstract superclass of all StringUnit types.
 """
 abstract type AbstractStringUnit end
 
-"""
-    AbstractOffsetStringUnit <: AbstractStringUnit
-
-Abstract superclass of all OffsetStringUnit types.
-"""
-abstract type AbstractOffsetStringUnit <: AbstractStringUnit end
-
 struct CodeunitUnit <: AbstractStringUnit
    index::Int
 end
@@ -51,6 +44,15 @@ Base.:*(i::Int, ::CharUnitMaker) = CharUnit(i)
 Base.:*(i::Int, ::GraphemeUnitMaker) = GraphemeUnit(i)
 Base.:*(i::Int, ::TextWidthUnitMaker) = TextWidthUnit(i)
 
+# OffsetStringUnits
+
+struct OffsetStringUnit{B<:AbstractStringUnit, O<:AbstractStringUnit} <: AbstractStringUnit
+    index::B
+    offset::O
+end
+
+OffsetStringUnit(a::SU, b::SU) where {SU<:AbstractStringUnit} = SU(a + b)
+
 # Operations
 
 function Base.:+(a::SU, b::SU) where {SU<:AbstractStringUnit}
@@ -59,6 +61,10 @@ end
 
 function Base.:+(a::SU, b::Integer) where {SU<:AbstractStringUnit}
     SU(a.index + b)
+end
+
+function Base.:+(a::SB, b::SO) where {SB<:AbstractStringUnit,SO<:AbstractStringUnit}
+    OffsetStringUnit{SB,SO}(a ,b)
 end
 
 function Base.:-(a::SU, b::SU) where {SU<:AbstractStringUnit}
@@ -106,10 +112,10 @@ end
 offsetafter(::AbstractString, off::Int, unit::CodeunitUnit) = off + unit.index
 offsetafter(str::AbstractString, off::Int, unit::CharUnit) = nextind(str, off, unit.index)
 
-function offsetafter(str::AbstractString, off::Int, unit::GraphemeUnit)
+function offsetafter(str::S, off::Int, unit::GraphemeUnit) where {S<:AbstractString}
     state = Ref{Int32}(0)
+    c0 = eltype(S)(0x00000000)
     n = 0
-    c0 = str[off]
     idx = off
     while true
         idx = nextind(str, idx)
@@ -117,7 +123,7 @@ function offsetafter(str::AbstractString, off::Int, unit::GraphemeUnit)
         c = str[idx]
         if isgraphemebreak!(state, c0, c)
             n += 1
-            n == unit.index && return idx
+            n ≥ unit.index && return idx
         end
         c0 = c
     end
@@ -141,9 +147,36 @@ function offsetafter(str::AbstractString, off::Int, unit::TextWidthUnit)
     end
 end
 
+function offsetafter(str::AbstractString, off::Int, unit::OffsetStringUnit)
+    offsetafter(str, offsetafter(str, off, unit.index), unit.offset)
+end
 
 offsetfrom(str::AbstractString, unit::AbstractStringUnit) = offsetafter(str, 0, unit)
 
+function Base.getindex(str::AbstractString, unit::AbstractStringUnit)
+    str[offsetfrom(str, unit)]
+end
 
+Base.getindex(str::AbstractString, unit::CodeunitUnit) = codeunit(str, offsetfrom(str, unit))
+
+function Base.getindex(str::AbstractString, unit::GraphemeUnit)
+    grapheme_at(str, offsetfrom(str, unit))
+end
+
+function grapheme_at(str::S, i::Integer) where {S<:AbstractString}
+    c0 = str[i]
+    state = Ref{Int32}(0)
+    n = 0
+    idx = i
+    while true
+        idx = nextind(str, idx)
+        idx > ncodeunits(str) && return @views str[i:i]
+        c = str[idx]
+        if isgraphemebreak!(state, c0, c)
+            return @views str[i:prevind(str,idx)]
+        end
+        c0 = c
+    end
+end
 
 end  # module StringUnits
