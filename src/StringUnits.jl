@@ -67,6 +67,18 @@ function Base.:+(a::SB, b::SO) where {SB<:AbstractStringUnit,SO<:AbstractStringU
     OffsetStringUnit{SB,SO}(a ,b)
 end
 
+Base.:+(a::Int, b::CodeunitUnit) = b + a
+
+# Example: 3ch + 2tw + 2tw -> 3ch + 4tw
+function Base.:+(a::OffsetStringUnit{SB,SO}, b::SO) where {SB<:AbstractStringUnit, SO<:AbstractStringUnit}
+    OffsetStringUnit{SB,SO}(a.index, a.offset + b)
+end
+
+
+function Base.:+(a::Int, b::SU) where {SU<:AbstractStringUnit}
+    OffsetStringUnit{CodeunitUnit,SU}(a*cu, b)
+end
+
 function Base.:-(a::SU, b::SU) where {SU<:AbstractStringUnit}
     SU(a.index - b.index)
 end
@@ -105,6 +117,13 @@ end
 
 # Conversion to offset
 
+"""
+    offsetafter(str::AbstractString, offset::Int, unit::AbstractStringUnit)
+
+Obtain the offset/codeunit index `unit` count after `offset`.  String types which
+have more efficient ways to calculate a unit offset should define this for their
+`AbstractString` subtype.
+"""
 function offsetafter(::AbstractString, ::Int, unit::AbstractStringUnit)
     error("$(typeof(unit)) <: AbstractStringUnit must define `offsetfrom`")
 end
@@ -153,14 +172,29 @@ end
 
 offsetfrom(str::AbstractString, unit::AbstractStringUnit) = offsetafter(str, 0, unit)
 
-function Base.getindex(str::AbstractString, unit::AbstractStringUnit)
-    str[offsetfrom(str, unit)]
+function Base.getindex(str::AbstractString, unit::SU) where {SU<:AbstractStringUnit}
+    partforoffset(SU, str, offsetfrom(str, unit))
 end
 
-Base.getindex(str::AbstractString, unit::CodeunitUnit) = codeunit(str, offsetfrom(str, unit))
+function Base.getindex(str::AbstractString, unit::OffsetStringUnit{I,O}) where {I<:AbstractStringUnit,O<:AbstractStringUnit}
+    at = offsetfrom(str, unit)
+    partforoffset(O, str, at)
+end
 
 function Base.getindex(str::AbstractString, unit::GraphemeUnit)
     grapheme_at(str, offsetfrom(str, unit))
+end
+
+function partforoffset(::Type{CodeunitUnit}, str::AbstractString, idx::Int)
+    codeunit(str, idx)
+end
+
+function partforoffset(::Type{GraphemeUnit}, str::AbstractString, idx::Int)
+    grapheme_at(str, idx)
+end
+
+function partforoffset(::Type{<:AbstractStringUnit}, str::AbstractString, idx::Int)
+    str[idx]
 end
 
 function grapheme_at(str::S, i::Integer) where {S<:AbstractString}
@@ -170,13 +204,23 @@ function grapheme_at(str::S, i::Integer) where {S<:AbstractString}
     idx = i
     while true
         idx = nextind(str, idx)
-        idx > ncodeunits(str) && return @views str[i:i]
+        idx > ncodeunits(str) && return @views str[i:prevind(str,idx)]
         c = str[idx]
         if isgraphemebreak!(state, c0, c)
             return @views str[i:prevind(str,idx)]
         end
         c0 = c
     end
+end
+
+Base.show(io::IO, idx::CodeunitUnit) = print(io, "$(idx.index)cu")
+Base.show(io::IO, idx::CharUnit) = print(io, "$(idx.index)ch")
+Base.show(io::IO, idx::GraphemeUnit) = print(io, "$(idx.index)gr")
+Base.show(io::IO, idx::TextWidthUnit) = print(io, "$(idx.index)tw")
+function Base.show(io::IO, idx::OffsetStringUnit)
+    show(io, idx.index)
+    print(io, " + ")
+    show(io, idx.offset)
 end
 
 end  # module StringUnits

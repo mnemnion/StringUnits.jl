@@ -18,6 +18,7 @@ using Aqua
     end
 
     @testset "Indexing" begin
+        @test "abcdαβ👨🏻‍🌾γ"[1gr] == "a"
         @test "abcdαβ👨🏻‍🌾γ"[7gr] == "👨🏻‍🌾"
         @test "abcdαβ👨🏻‍🌾γ"[8gr] == "γ"
         @test "abcdαβ👨🏻‍🌾γ"[1gr] == "a"
@@ -25,5 +26,21 @@ using Aqua
         @test "abcd"[1cu] == UInt8('a')
         @test "abcd"[4cu] == UInt8('d')
         @test_throws BoundsError "abcd"[5cu]
+        @test ("abc👍de")[3tw] == 'c'
+        @test ("abc👍de")[4tw] == '👍'
+        @test ("abc👍de")[5tw] == '👍'
+        @test ("abc👍de")[6tw] == 'd'
+        ref = "ab👍🏼☝🏽👎🏼"
+        @test ref[5gr] == "👎🏼"
+        @test ref[1 + 4gr] == "👎🏼"
+        @test ref[1 + 3gr] == "☝🏽"
+    end
+
+    @testset "Heterogenous Addition" begin
+        @test repr(1 + 1gr + 1gr) == "1cu + 2gr"
+        @test repr(3 + 1gr + 1tw) == "3cu + 1gr + 1tw"
+        @test repr(1gr) == "1gr"
+        @test repr(3 + 1cu + 1gr) == "4cu + 1gr"
+        @test repr(1tw + 1gr + 1tw + 1ch) == "1tw + 1gr + 1tw + 1ch"
     end
 end
