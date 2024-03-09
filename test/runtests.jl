@@ -34,10 +34,12 @@ using Aqua
         @test ref[5gr] == "👎🏼"
         @test ref[1 + 4gr] == "👎🏼"
         @test ref[1 + 3gr] == "☝🏽"
+        @test ref[2ch + 1gr] == "👍🏼"
         @test_throws BoundsError ref[0cu]
         @test_throws BoundsError ref[0ch]
         @test_throws BoundsError ref[0gr]
         @test_throws BoundsError ref[0tw]
+        @test ref[1cu + 0gr] == ref[0cu + 1gr]
     end
 
     @testset "Comparisons and Identities" begin
