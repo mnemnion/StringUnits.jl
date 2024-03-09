@@ -34,6 +34,21 @@ using Aqua
         @test ref[5gr] == "👎🏼"
         @test ref[1 + 4gr] == "👎🏼"
         @test ref[1 + 3gr] == "☝🏽"
+        @test_throws BoundsError ref[0cu]
+        @test_throws BoundsError ref[0ch]
+        @test_throws BoundsError ref[0gr]
+        @test_throws BoundsError ref[0tw]
+    end
+
+    @testset "Comparisons and Identities" begin
+        @test iszero(0cu)
+        @test iszero(0ch)
+        @test iszero(0gr)
+        @test iszero(0tw)
+        @test zero(1cu) == 0cu
+        @test zero(1ch) == 0ch
+        @test zero(1gr) == 0gr
+        @test zero(1tw) == 0tw
     end
 
     @testset "Heterogenous Addition" begin

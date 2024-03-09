@@ -11,6 +11,7 @@ Abstract superclass of all StringUnit types.
 """
 abstract type AbstractStringUnit end
 
+
 struct CodeunitUnit <: AbstractStringUnit
    index::Int
 end
@@ -51,7 +52,18 @@ struct OffsetStringUnit{B<:AbstractStringUnit, O<:AbstractStringUnit} <: Abstrac
     offset::O
 end
 
-OffsetStringUnit(a::SU, b::SU) where {SU<:AbstractStringUnit} = SU(a + b)
+# StringUnitRange
+
+struct StringUnitRange{S<:AbstractStringUnit} <: AbstractUnitRange{S}
+    start::S
+    stop::S
+end
+
+struct StringUnitStepRange{S<:AbstractStringUnit} <: AbstractUnitRange{S}
+    start::S
+    step::S
+    stop::S
+end
 
 # Operations
 
@@ -64,7 +76,7 @@ function Base.:+(a::SU, b::Integer) where {SU<:AbstractStringUnit}
 end
 
 function Base.:+(a::SB, b::SO) where {SB<:AbstractStringUnit,SO<:AbstractStringUnit}
-    OffsetStringUnit{SB,SO}(a ,b)
+    OffsetStringUnit{SB,SO}(a, b)
 end
 
 Base.:+(a::Int, b::CodeunitUnit) = b + a
@@ -95,6 +107,14 @@ function Base.:*(a::SU, b::SU) where {SU<:AbstractStringUnit}
     SU(a.index * b.index)
 end
 
+function Base.:*(::SO, ::SU) where {SO<:OffsetStringUnit,SU<:AbstractStringUnit}
+    throw(ArgumentError("Can't multiply StringOffsetUnits"))
+end
+
+function Base.:*(::OffsetStringUnit, b::Integer)
+    throw(ArgumentError("Can't multiply StringOffsetUnits"))
+end
+
 function Base.:*(a::SU, b::Integer) where {SU<:AbstractStringUnit}
     SU(a.index * b)
 end
@@ -107,12 +127,51 @@ function Base.:÷(a::SU, b::Integer) where {SU<:AbstractStringUnit}
     SU(a.index ÷ b)
 end
 
+function Base.:÷(::SO, ::SU) where {SO<:OffsetStringUnit,SU<:AbstractStringUnit}
+    throw(ArgumentError("Can't divide StringOffsetUnits"))
+end
+
+function Base.:÷(::OffsetStringUnit, b::Integer)
+    throw(ArgumentError("Can't divide StringOffsetUnits"))
+end
+
 function Base.:%(a::SU, b::SU) where {SU<:AbstractStringUnit}
     SU(a.index % b.index)
 end
 
 function Base.:%(a::SU, b::Integer) where {SU<:AbstractStringUnit}
     SU(a.index % b)
+end
+
+function Base.:%(::SO, ::SU) where {SO<:OffsetStringUnit,SU<:AbstractStringUnit}
+    throw(ArgumentError("Can't take remainder of StringOffsetUnits"))
+end
+
+function Base.:%(::OffsetStringUnit, b::Integer)
+    throw(ArgumentError("Can't take remainder of StringOffsetUnits"))
+end
+
+Base.isless(a::SU, b::SU) where {SU<:AbstractStringUnit} = a.index < b.index
+Base.isless(::OffsetStringUnit, ::AbstractStringUnit) = throw(ArgumentError("can't compare lengths for offset string units"))
+Base.isless(::AbstractStringUnit, ::OffsetStringUnit) = throw(ArgumentError("can't compare lengths for offset string units"))
+Base.isless(::OffsetStringUnit, ::OffsetStringUnit) = throw(ArgumentError("can't compare lengths for offset string units"))
+function Base.isless(a::SU, b::SV) where {SU<:AbstractStringUnit, SV<:AbstractStringUnit}
+    throw(ArgumentError("can't compare lengths of $SU and $SV"))
+end
+
+Base.:(==)(a::SU, b::SU) where {SU<:AbstractStringUnit} = a.index == b.index
+Base.:(==)(a::OffsetStringUnit{I,O}, b::OffsetStringUnit{I,O}) where {I,O} = a.index == b.index && a.offset == b.offset
+
+Base.one(::Union{T,Type{T}}) where {T<:AbstractStringUnit} = T(1)
+Base.oneunit(::Union{T,Type{T}}) where {T<:AbstractStringUnit} = T(1)
+function Base.one(::Union{OffsetStringUnit{B,O},Type{OffsetStringUnit{B,O}}}) where {B<:AbstractStringUnit, O<:AbstractStringUnit}
+    OffsetStringUnit(zero(B), one(O))
+end
+Base.oneunit(::Union{SO,Type{SO}}) where {SO<:OffsetStringUnit} = one(SO)
+
+Base.zero(::Union{T,Type{T}}) where {T<:AbstractStringUnit} = T(0)
+function Base.zero(::Union{OffsetStringUnit{B,O},Type{OffsetStringUnit{B,O}}}) where {B<:AbstractStringUnit, O<:AbstractStringUnit}
+    OffsetStringUnit(zero(B), zero(O))
 end
 
 # Conversion to offset
@@ -132,13 +191,14 @@ offsetafter(::AbstractString, off::Int, unit::CodeunitUnit) = off + unit.index
 offsetafter(str::AbstractString, off::Int, unit::CharUnit) = nextind(str, off, unit.index)
 
 function offsetafter(str::S, off::Int, unit::GraphemeUnit) where {S<:AbstractString}
+    @boundscheck unit.index ≤ 0 && throw(BoundsError(str, unit.index))
     state = Ref{Int32}(0)
     c0 = eltype(S)(0x00000000)
     n = 0
     idx = off
     while true
         idx = nextind(str, idx)
-        idx > ncodeunits(str) && throw(BoundsError(str, idx))
+        @boundscheck idx > ncodeunits(str) && throw(BoundsError(str, idx))
         c = str[idx]
         if isgraphemebreak!(state, c0, c)
             n += 1
@@ -156,18 +216,23 @@ function offsetafter(str::AbstractString, off::Int, unit::TextWidthUnit)
     # I've added a test for textwidth to verify the buggy results describe above
     # continue to hold, if those tests ever fail, this can be switched to measure
     # graphemes accordingly.
+    @boundscheck unit.index ≤ 0 && throw(BoundsError(str, unit.index))
     idx = off
     width = 0
     while true
         idx = nextind(str, idx)
-        idx > ncodeunits(str) && throw(BoundsError(str, idx))
+        @boundscheck idx > ncodeunits(str) && throw(BoundsError(str, idx))
         width += textwidth(str[idx])
         width ≥ unit.index && return idx
     end
 end
 
 function offsetafter(str::AbstractString, off::Int, unit::OffsetStringUnit)
-    offsetafter(str, offsetafter(str, off, unit.index), unit.offset)
+    if iszero(unit.index)
+        offsetafter(str, off, unit.offset)
+    else
+        offsetafter(str, offsetafter(str, off, unit.index), unit.offset)
+    end
 end
 
 offsetfrom(str::AbstractString, unit::AbstractStringUnit) = offsetafter(str, 0, unit)
