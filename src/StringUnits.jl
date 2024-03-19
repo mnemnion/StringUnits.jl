@@ -1,6 +1,8 @@
 module StringUnits
 
-export cu, ch, gr, tw, offsetfrom
+export cu, ch, gr, tw
+
+# public: offsetfrom
 
 import Base.Unicode: isgraphemebreak!
 
@@ -64,10 +66,10 @@ const gr = GraphemeUnitMaker()
 """Unit for textwidth: 1tw."""
 const tw = TextWidthUnitMaker()
 
-Base.:*(i::Int, ::CodeunitUnitMaker) = CodeunitUnit(i)
-Base.:*(i::Int, ::CharUnitMaker) = CharUnit(i)
-Base.:*(i::Int, ::GraphemeUnitMaker) = GraphemeUnit(i)
-Base.:*(i::Int, ::TextWidthUnitMaker) = TextWidthUnit(i)
+Base.:*(i::Integer, ::CodeunitUnitMaker) = CodeunitUnit(i)
+Base.:*(i::Integer, ::CharUnitMaker) = CharUnit(i)
+Base.:*(i::Integer, ::GraphemeUnitMaker) = GraphemeUnit(i)
+Base.:*(i::Integer, ::TextWidthUnitMaker) = TextWidthUnit(i)
 
 # OffsetStringUnits
 
@@ -116,14 +118,19 @@ function Base.:+(a::SB, b::SO) where {SB<:AbstractStringUnit,SO<:AbstractStringU
     OffsetStringUnit{SB,SO}(a, b)
 end
 
-Base.:+(a::Int, b::CodeunitUnit) = b + a
+Base.:+(a::Integer, b::CodeunitUnit) = b + a
 
-# Example: 3ch + 2tw + 2tw -> 3ch + 4tw
+# Example: 3ch + 2tw + 2tw == 3ch + 4tw
 function Base.:+(a::OffsetStringUnit{SB,SO}, b::SO) where {SB<:AbstractStringUnit, SO<:AbstractStringUnit}
     OffsetStringUnit{SB,SO}(a.index, a.offset + b)
 end
 
-function Base.:+(a::Int, b::SU) where {SU<:AbstractStringUnit}
+# Example: 1tw + 1gr + 3 == 1tw + 4gr
+function Base.:+(a::OffsetStringUnit{SB,SO}, b::Integer) where {SB<:AbstractStringUnit, SO<:AbstractStringUnit}
+    OffsetStringUnit{SB,SO}(a.index, a.offset + b)
+end
+
+function Base.:+(a::Integer, b::SU) where {SU<:AbstractStringUnit}
     OffsetStringUnit{CodeunitUnit,SU}(a*cu, b)
 end
 
@@ -135,7 +142,7 @@ function Base.:-(a::SU, b::Integer) where {SU<:AbstractStringUnit}
     SU(a.index - b)
 end
 
-function Base.:-(a::SU, b) where {SU<:AbstractStringUnit}
+function Base.:-(a::SU) where {SU<:AbstractStringUnit}
     SU(-a.index)
 end
 
@@ -143,12 +150,12 @@ function Base.:*(a::SU, b::SU) where {SU<:AbstractStringUnit}
     SU(a.index * b.index)
 end
 
-function Base.:*(::SO, ::SU) where {SO<:OffsetStringUnit,SU<:AbstractStringUnit}
-    throw(ArgumentError("Can't multiply StringOffsetUnits"))
+function Base.:*(::SA, ::SB) where {SA<:AbstractStringUnit,SB<:AbstractStringUnit}
+    throw(ArgumentError("Can't multiply differing StringUnits"))
 end
 
 function Base.:*(::OffsetStringUnit, b::Integer)
-    throw(ArgumentError("Can't multiply StringOffsetUnits"))
+    throw(ArgumentError("Can't multiply OffsetStringUnits"))
 end
 
 function Base.:*(a::SU, b::Integer) where {SU<:AbstractStringUnit}
@@ -163,12 +170,12 @@ function Base.:÷(a::SU, b::Integer) where {SU<:AbstractStringUnit}
     SU(a.index ÷ b)
 end
 
-function Base.:÷(::SO, ::SU) where {SO<:OffsetStringUnit,SU<:AbstractStringUnit}
-    throw(ArgumentError("Can't divide StringOffsetUnits"))
+function Base.:÷(::SA, ::SB) where {SA<:AbstractStringUnit,SB<:AbstractStringUnit}
+    throw(ArgumentError("Can't divide differing OffsetStringUnits"))
 end
 
 function Base.:÷(::OffsetStringUnit, b::Integer)
-    throw(ArgumentError("Can't divide StringOffsetUnits"))
+    throw(ArgumentError("Can't divide a OffsetStringUnit"))
 end
 
 function Base.:%(a::SU, b::SU) where {SU<:AbstractStringUnit}
@@ -179,12 +186,12 @@ function Base.:%(a::SU, b::Integer) where {SU<:AbstractStringUnit}
     SU(a.index % b)
 end
 
-function Base.:%(::SO, ::SU) where {SO<:OffsetStringUnit,SU<:AbstractStringUnit}
-    throw(ArgumentError("Can't take remainder of StringOffsetUnits"))
+function Base.:%(::SA, ::SB) where {SA<:AbstractStringUnit,SB<:AbstractStringUnit}
+    throw(ArgumentError("Can't take remainder differing StringUnits"))
 end
 
 function Base.:%(::OffsetStringUnit, b::Integer)
-    throw(ArgumentError("Can't take remainder of StringOffsetUnits"))
+    throw(ArgumentError("Can't take remainder of OffsetStringUnits"))
 end
 
 Base.isless(a::SU, b::SU) where {SU<:AbstractStringUnit} = a.index < b.index
@@ -250,9 +257,9 @@ end
 """
     offsetafter(str::AbstractString, offset::Int, unit::AbstractStringUnit)
 
-Obtain the offset/codeunit index `unit` count after `offset`.  String types which
-have more efficient ways to calculate a unit offset should define this for their
-`AbstractString` subtype.
+Obtain the 'raw' offset/codeunit index `unit` count after `offset`.  String types
+which have more efficient ways to calculate a unit offset should define this for
+their `AbstractString` subtype.
 """
 function offsetafter(::AbstractString, ::Int, unit::AbstractStringUnit)
     error("$(typeof(unit)) <: AbstractStringUnit must define `offsetfrom`")
@@ -263,10 +270,12 @@ offsetafter(str::AbstractString, off::Int, unit::CharUnit) = nextind(str, off, u
 
 function offsetafter(str::S, off::Int, unit::GraphemeUnit) where {S<:AbstractString}
     @boundscheck off + unit.index ≤ 0 && throw(BoundsError(str, off + unit.index))
-    iszero(unit) && return off
-
     state = Ref{Int32}(0)
-    c0 = eltype(S)(0x00000000)
+    if iszero(off)
+        c0 = eltype(S)(0x00000000)
+    else
+        c0 = str[off]
+    end
     n = 0
     idx = off
     while true
@@ -275,7 +284,13 @@ function offsetafter(str::S, off::Int, unit::GraphemeUnit) where {S<:AbstractStr
         c = str[idx]
         if isgraphemebreak!(state, c0, c)
             n += 1
-            n ≥ unit.index && return idx
+            if n ≥ unit.index
+                if iszero(unit)
+                    return prevind(str, idx)
+                else
+                    return idx
+                end
+            end
         end
         c0 = c
     end
@@ -324,22 +339,28 @@ function offsetfrom(str::AbstractString, range::StringUnitRange)
     start:stop
 end
 
-function partforoffset(::Type{CodeunitUnit}, str::AbstractString, idx::Int)
+function partforoffset(::Type{CodeunitUnit}, str::AbstractString, idx::Integer)
     codeunit(str, idx)
 end
 
-function partforoffset(::Type{GraphemeUnit}, str::AbstractString, idx::Int)
+function partforoffset(::Type{GraphemeUnit}, str::AbstractString, idx::Integer)
     grapheme_at(str, idx)
 end
 
-function partforoffset(::Type{<:AbstractStringUnit}, str::AbstractString, idx::Int)
+function partforoffset(::Type{<:AbstractStringUnit}, str::AbstractString, idx::Integer)
     str[idx]
 end
 
+"""
+    grapheme_at(str::S, i::Integer) where {S<:AbstractString}
+
+Retrieve the grapheme at the given offset.  String types which
+have a faster way to find a grapheme index should implement this
+for their type.
+"""
 function grapheme_at(str::S, i::Integer) where {S<:AbstractString}
     c0 = str[i]
     state = Ref{Int32}(0)
-    n = 0
     idx = i
     while true
         idx = nextind(str, idx)
@@ -359,6 +380,7 @@ Return a Tuple `(start, stop)` containing the codeunit range corresponding
 to `range`.
 """
 function indicesfrom(str::AbstractString, range::StringUnitRange{S}) where {S}
+    # StringUnitRanges of heterogeneous type have the eltype of the stop unit
     if eltype(range) == S
         range.stop < range.start && return 1, 0
         start = offsetfrom(str, range.start)
