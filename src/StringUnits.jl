@@ -285,7 +285,7 @@ which have more efficient ways to calculate a unit offset should define this for
 their `AbstractString` subtype.
 """
 function offsetafter(::AbstractString, ::Integer, unit::AbstractStringUnit)
-    error("$(typeof(unit)) <: AbstractStringUnit must define `offsetfrom`")
+    error("$(typeof(unit)) <: AbstractStringUnit must define `offsetafter`")
 end
 
 offsetafter(::AbstractString, off::Integer, unit::CodeunitUnit) = off + unit.index
@@ -293,6 +293,9 @@ offsetafter(str::AbstractString, off::Integer, unit::CharUnit) = nextind(str, of
 
 function offsetafter(str::S, off::Integer, unit::GraphemeUnit) where {S<:AbstractString}
     @boundscheck off + unit.index ≤ 0 && throw(BoundsError(str, off + unit.index))
+    if thisind(str, off) != off
+        throw(StringIndexError(str, off))
+    end
     state = Ref{Int32}(0)
     if iszero(off)
         c0 = eltype(S)(0x00000000)
