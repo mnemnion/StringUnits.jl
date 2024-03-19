@@ -122,6 +122,20 @@ function Base.:+(a::SB, b::SO) where {SB<:AbstractStringUnit,SO<:AbstractStringU
     OffsetStringUnit{SB,SO}(a, b)
 end
 
+function Base.:+(a::SS, b::SS) where {SS<:OffsetStringUnit{SI,SB}} where {SI<:AbstractStringUnit,SB<:AbstractStringUnit}
+    if iszero(a.index)
+        return OffsetStringUnit(b.index, a.offset + b.offset)
+    elseif iszero(a.offset)
+        return OffsetStringUnit(a.index + b.index, b.offset)
+    elseif iszero(b.index)
+        return OffsetStringUnit(a.index, a.offset + b.offset)
+    elseif iszero(b.offset)
+        return OffsetStringUnit(a.index + b.index, a.offset)
+    else
+        return OffsetStringUnit(a, b)
+    end
+end
+
 Base.:+(a::Integer, b::CodeunitUnit) = b + a
 
 # Example: 3ch + 2tw + 2tw == 3ch + 4tw
@@ -328,6 +342,8 @@ end
 function offsetafter(str::AbstractString, off::Integer, unit::OffsetStringUnit)
     if iszero(unit.index)
         offsetafter(str, off, unit.offset)
+    elseif iszero(unit.offset)
+        offsetafter(str, off, unit.index)
     else
         offsetafter(str, offsetafter(str, off, unit.index), unit.offset)
     end
@@ -396,10 +412,11 @@ function indicesfrom(str::AbstractString, range::StringUnitRange{S}) where {S}
         stop = offsetafter(str, start, range.stop - range.start)
         return start, stop
     else
-        println("hetero")
         start = offsetfrom(str, range.start)
         stop = offsetfrom(str, range.stop)
-        println("start: ", start, " stop: ", stop)
+        if eltype(range) <: GraphemeUnit
+            stop = offsetafter(str, stop, zero(GraphemeUnit))
+        end
         if start > stop
             return start, start-1
         else
