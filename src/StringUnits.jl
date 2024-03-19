@@ -84,6 +84,10 @@ struct OffsetStringUnit{B<:AbstractStringUnit, O<:AbstractStringUnit} <: Abstrac
     offset::O
 end
 
+function OffsetStringUnit(a::SI, b::OffsetStringUnit{SI,SO}) where {SI<:AbstractStringUnit, SO<:AbstractStringUnit}
+    OffsetStringUnit(a + b.index, b.offset)
+end
+
 # StringUnitRange
 """
     StringUnitRange{S<:AbstractStringUnit} <: AbstractUnitRange{S}
@@ -123,6 +127,11 @@ Base.:+(a::Integer, b::CodeunitUnit) = b + a
 # Example: 3ch + 2tw + 2tw == 3ch + 4tw
 function Base.:+(a::OffsetStringUnit{SB,SO}, b::SO) where {SB<:AbstractStringUnit, SO<:AbstractStringUnit}
     OffsetStringUnit{SB,SO}(a.index, a.offset + b)
+end
+
+# Example: 5ch + (1ch + 1gr) == 6ch + 1gr
+function Base.:+(a::SI, b::OffsetStringUnit{SI,SO}) where {SI<:AbstractStringUnit, SO<:AbstractStringUnit}
+    OffsetStringUnit(a + b.index, b.offset)
 end
 
 # Example: 1tw + 1gr + 3 == 1tw + 4gr
@@ -219,8 +228,8 @@ end
 Base.typemin(::Union{T,Type{T}}) where {T<:AbstractStringUnit} = zero(T)
 
 Base.:(:)(a::AbstractStringUnit, b::AbstractStringUnit) = StringUnitRange(a,b)
-Base.:(:)(a::AbstractStringUnit, b::Int) = StringUnitRange(a,CodeunitUnit(b))
-Base.:(:)(a::Int, b::AbstractStringUnit) = StringUnitRange(CodeunitUnit(a), b)
+Base.:(:)(a::AbstractStringUnit, b::Integer) = StringUnitRange(a,CodeunitUnit(b))
+Base.:(:)(a::Integer, b::AbstractStringUnit) = StringUnitRange(CodeunitUnit(a), b)
 
 Base.eltype(::Union{T,Type{T}}) where {T<:StringUnitRange{S}} where {S} = S
 Base.eltype(::Union{T,Type{T}}) where {T<:StringUnitRange{S}} where {S<:OffsetStringUnit{B,I}} where {B,I} = I
@@ -255,20 +264,20 @@ end
 # Conversion to offset
 
 """
-    offsetafter(str::AbstractString, offset::Int, unit::AbstractStringUnit)
+    offsetafter(str::AbstractString, offset::Integer unit::AbstractStringUnit)
 
 Obtain the 'raw' offset/codeunit index `unit` count after `offset`.  String types
 which have more efficient ways to calculate a unit offset should define this for
 their `AbstractString` subtype.
 """
-function offsetafter(::AbstractString, ::Int, unit::AbstractStringUnit)
+function offsetafter(::AbstractString, ::Integer, unit::AbstractStringUnit)
     error("$(typeof(unit)) <: AbstractStringUnit must define `offsetfrom`")
 end
 
-offsetafter(::AbstractString, off::Int, unit::CodeunitUnit) = off + unit.index
-offsetafter(str::AbstractString, off::Int, unit::CharUnit) = nextind(str, off, unit.index)
+offsetafter(::AbstractString, off::Integer, unit::CodeunitUnit) = off + unit.index
+offsetafter(str::AbstractString, off::Integer, unit::CharUnit) = nextind(str, off, unit.index)
 
-function offsetafter(str::S, off::Int, unit::GraphemeUnit) where {S<:AbstractString}
+function offsetafter(str::S, off::Integer, unit::GraphemeUnit) where {S<:AbstractString}
     @boundscheck off + unit.index ≤ 0 && throw(BoundsError(str, off + unit.index))
     state = Ref{Int32}(0)
     if iszero(off)
@@ -296,7 +305,7 @@ function offsetafter(str::S, off::Int, unit::GraphemeUnit) where {S<:AbstractStr
     end
 end
 
-function offsetafter(str::AbstractString, off::Int, unit::TextWidthUnit)
+function offsetafter(str::AbstractString, off::Integer, unit::TextWidthUnit)
     # Note: the current implementation of `textwidth` is unsatisfactory: it lacks
     # state entirely, so it gives 2 for 👍 and 4 for 👎🏼.
     # Given that, we judge textwidth on a per-Char basis, rather than generating
@@ -316,7 +325,7 @@ function offsetafter(str::AbstractString, off::Int, unit::TextWidthUnit)
     end
 end
 
-function offsetafter(str::AbstractString, off::Int, unit::OffsetStringUnit)
+function offsetafter(str::AbstractString, off::Integer, unit::OffsetStringUnit)
     if iszero(unit.index)
         offsetafter(str, off, unit.offset)
     else
@@ -387,8 +396,10 @@ function indicesfrom(str::AbstractString, range::StringUnitRange{S}) where {S}
         stop = offsetafter(str, start, range.stop - range.start)
         return start, stop
     else
+        println("hetero")
         start = offsetfrom(str, range.start)
         stop = offsetfrom(str, range.stop)
+        println("start: ", start, " stop: ", stop)
         if start > stop
             return start, start-1
         else
