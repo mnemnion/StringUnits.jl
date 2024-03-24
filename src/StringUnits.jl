@@ -130,7 +130,7 @@ function Base.:+(a::SS, b::SS) where {SS<:OffsetStringUnit{SI,SB}} where {SI<:Ab
     elseif iszero(b.index)
         return OffsetStringUnit(a.index, a.offset + b.offset)
     elseif iszero(b.offset)
-        return OffsetStringUnit(a.index + b.index, a.offset)
+        return OffsetStringUnit(a, b.index)
     else
         return OffsetStringUnit(a, b)
     end
