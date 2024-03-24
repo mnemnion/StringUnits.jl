@@ -129,6 +129,7 @@ using Test
         @test 4gr - 4gr == 0gr
         @test 5ch + (1ch + 1gr) == 6ch + 1gr
         @test 5ch - 4ch == 1ch
+        @test 5ch - 4 == 5ch - 4ch
         @test 5gr * 5gr == 25gr
         @test 5gr * 5 == 5gr * 5gr
         @test 6gr ÷ 2gr == 3gr
@@ -176,6 +177,7 @@ using Test
         @test twref[2ch + 0cu] isa UInt8
         @test "abcd"[1cu:3] == "abc"
         @test repr(4cu:6ch) == "(4cu + 0ch):(0cu + 6ch)"
+        @test "abcd"[5ch:3cu] == ""
         @test_throws StringIndexError twref[1ch + 2tw:2ch + 1cu]
         @test length(ref, 5gr, 5gr) == 192
         @test length(ref, 1ch, 4ch) == 4
