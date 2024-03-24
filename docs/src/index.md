@@ -184,6 +184,19 @@ julia> ref[4gr + 1cu]
 0x9f
 ```
 
+This return value may be determined for any subclass of `AbstractStringUnit` using `StringUnits.stringunittype`:
+
+```jldoctest
+julia> StringUnits.stringunittype(1ch)
+StringUnits.CharUnit
+
+julia> StringUnits.stringunittype(1ch+1gr)
+StringUnits.GraphemeUnit
+
+julia> StringUnits.stringunittype(1ch+1gr:5+1tw)
+StringUnits.TextWidthUnit
+```
+
 If you would prefer a different sort of return value at a given index, add a 0-width
 unit of that type.
 
@@ -317,6 +330,47 @@ subclass with a different structure, and adapting `StringUnits` to it, a project
 happen to be working on.  There's some discussion of how to adapt `StringUnits` to a
 custom `AbstractString` subtype in the [docstrings](#Docstrings) section.
 
+## Miscellaneous
+
+Methods have been implemented for Base functions which are documented to take a string
+and an index.
+
+```jldoctest
+julia> ref =  "a👍🏼a👎🏼a👍🏼a👎🏼a"
+"a👍🏼a👎🏼a👍🏼a👎🏼a"
+
+julia> ref2 = "a👍a👎a👍a👎a"
+"a👍a👎a👍a👎a"
+
+julia> findnext('a', ref, 4gr)
+19
+
+julia> findprev('a', ref, 8gr)
+28
+
+julia> findnext(c -> c == 'a', ref2, 6tw)
+11
+
+julia> findprev(c -> c == 'a', ref2, 11tw)
+16
+
+julia> length(ref, 1ch, 4gr)
+6
+
+julia> length(ref[1ch:4gr])
+6
+```
+
+If we missed any, feel free to open an issue.
+
+Custom functions which take a string and an index should be easy to adapt:
+
+```julia
+function mystringfn(str::AbstractString, unit::AbstractStringUnit, args...)
+    mystringfn(str, StringUnits.offsetfrom(str, unit), args...)
+end
+```
+
 ## Quirks
 
 `StringUnits` is a young package. I've shaken out any number of bugs, and one might
@@ -371,16 +425,20 @@ first character", which is in the middle of the `🤬`: valid to index as a `cu`
 you get a byte back, but not valid to index as a `ch`.  Practical applications of
 `StringUnits` are unlikely to run into problems of this sort, because units like
 `12ch + 5cu + 8gr + 4tw`, while they're fun to try out in the REPL, don't really
-represent indices or ranges which one might be looking for in a real program.
+represent indices or ranges which one might be looking for in a real program. Note
+that if a composite `StringUnit` tries to measure e.g. characters from an invalid
+index, this will throw an error. We felt that cases where this happens are probably
+erroneous, and that it is therefore more helpful to surface the error than to silently
+recalibrate with `thisind` or `nextind`.
 
-This is in fact an illustration of an advantage which semi-open intervals (which
-imply zero-based indexing, for reasons [Edsger Dijkstra famously
+This behavior is also an illustration of an advantage which semi-open intervals
+(which imply zero-based indexing, for reasons [Edsger Dijkstra famously
 explained](https://www.cs.utexas.edu/users/EWD/transcriptions/EWD08xx/EWD831.html))
 have over the closed intervals used in Julia. A string "🥸!", from `0` to `5`, would
 be sliced thus to get the nerd out: `"🥸!"[0:4]`, and for the bang, `"🥸!"[4:5]`.
 The way Julia indexes strings, it has to be `"🥸!"[1:1]`, because `4` is inside the
 nerd and `5` includes the bang.  Note also that `4 - 0` is the number of codeunits in
-Groucho, and `5-4` the number in `!`, although Julia mitigates this problem entirely
+Groucho, and `5-4` the number in `!`, although Julia mitigates this problem
 by storing the length with the string, so interval maths can be done using
 `sizeof(str)`, without the performance and security (!) implications of `strlen`.
 
@@ -389,7 +447,22 @@ on complex manipulation code, the sort that gets written into packages, while ma
 life easier on user code, because `"12345"[3]` and `"12345"[2:3]` do what you'd
 expect.
 
-And now, with `StringUnits`, you can do `"१२३४५"[2ch:3ch]`, or `"1︎⃣2︎⃣3︎⃣4︎⃣5︎⃣"[2gr:3gr]`, with the same ease.
+And now, with `StringUnits`, you can do these as well, with the same ease.
+
+```jldoctest
+julia> "१२३४५"[2ch:3ch]
+"२३"
+
+julia> "1︎⃣2︎⃣3︎⃣4︎⃣5︎⃣"[2gr:3gr]
+"2︎⃣3"
+
+julia> length(ans)
+4
+```
+
+Threw in the length there to demonstrate that, if the output appears incorrect, this
+is just a rendering bug.
+
 
 ## Docstrings
 
