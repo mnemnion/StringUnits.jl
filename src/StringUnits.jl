@@ -261,7 +261,7 @@ function Base.getindex(str::AbstractString, unit::GraphemeUnit)
 end
 
 function Base.getindex(str::AbstractString, range::StringUnitRange)
-    start, stop = @inline indicesfrom(str, range)::Tuple{Int,Int}
+    start, stop = @inline indicesfrom(str, range)
     str[start:stop]
 end
 
