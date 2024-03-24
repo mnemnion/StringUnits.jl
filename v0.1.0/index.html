@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · StringUnits.jl</title><meta name="title" content="Home · StringUnits.jl"/><meta property="og:title" content="Home · StringUnits.jl"/><meta property="twitter:title" content="Home · StringUnits.jl"/><meta name="description" content="Documentation for StringUnits.jl."/><meta property="og:description" content="Documentation for StringUnits.jl."/><meta property="twitter:description" content="Documentation for StringUnits.jl."/><meta property="og:url" content="https://mnemnion.github.io/StringUnits.jl/"/><meta property="twitter:url" content="https://mnemnion.github.io/StringUnits.jl/"/><link rel="canonical" href="https://mnemnion.github.io/StringUnits.jl/"/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href>StringUnits.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Home</a><ul class="internal"><li><a class="tocitem" href="#Mixed-Units:-OffsetStringUnit"><span>Mixed Units: OffsetStringUnit</span></a></li><li><a class="tocitem" href="#StringUnitRange"><span>StringUnitRange</span></a></li><li><a class="tocitem" href="#Miscellaneous"><span>Miscellaneous</span></a></li><li><a class="tocitem" href="#Quirks"><span>Quirks</span></a></li><li><a class="tocitem" href="#Docstrings"><span>Docstrings</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Home</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Home</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/mnemnion/StringUnits.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/mnemnion/StringUnits.jl/blob/trunk/docs/src/index.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="StringUnits"><a class="docs-heading-anchor" href="#StringUnits">StringUnits</a><a id="StringUnits-1"></a><a class="docs-heading-anchor-permalink" href="#StringUnits" title="Permalink"></a></h1><p><strong>StringUnits.jl</strong> is a package offering units for indexing and slicing strings, by codeunit, character, textwidth, and graphemes.</p><p>It exports four singletons, <code>cu</code>, <code>ch</code>, <code>tw</code>, and <code>gr</code>, which are used via juxtaposition to create the associated units.</p><pre><code class="language-julia-repl hljs">julia&gt; ref = &quot;aβ∅😃🫶🏼!&quot;
+&quot;aβ∅😃🫶🏼!&quot;
+
+julia&gt; ref[2]
+&#39;β&#39;: Unicode U+03B2 (category Ll: Letter, lowercase)
+
+julia&gt; ref[2cu]
+0xce
+
+julia&gt; ref[2ch]
+&#39;β&#39;: Unicode U+03B2 (category Ll: Letter, lowercase)
+
+julia&gt; ref[3ch]
+&#39;∅&#39;: Unicode U+2205 (category Sm: Symbol, math)
+
+julia&gt; ref[4ch]
+&#39;😃&#39;: Unicode U+1F603 (category So: Symbol, other)
+
+julia&gt; ref[4tw]
+&#39;😃&#39;: Unicode U+1F603 (category So: Symbol, other)
+
+julia&gt; ref[5tw]
+&#39;😃&#39;: Unicode U+1F603 (category So: Symbol, other)
+
+julia&gt; ref[5ch]
+&#39;🫶&#39;: Unicode U+1FAF6 (category So: Symbol, other)
+
+julia&gt; ref[5gr]
+&quot;🫶🏼&quot;</code></pre><p>String units of a common type support normal arithmetic for natural numbers.  Meaning that subtraction which would result in a negative value is an error, like dividing by zero.  Julia doesn&#39;t use the convention that negative-valued string indices count from the end of the string, so <code>StringUnits</code> doesn&#39;t either.</p><pre><code class="language-julia-repl hljs">julia&gt; 2ch + 4ch
+6ch
+
+julia&gt; 6ch - 2ch
+4ch
+
+julia&gt; 8ch ÷ 2ch
+4ch
+
+julia&gt; 2ch * 4ch
+8ch
+
+julia&gt; 7ch % 3ch
+1ch
+
+julia&gt; 4ch - 6ch
+ERROR: DomainError with illegal subtraction 4ch &lt; 6ch:
+[...]
+
+julia&gt; 5ch ÷ 0ch
+ERROR: DivideError: integer division error
+[...]</code></pre><h2 id="Mixed-Units:-OffsetStringUnit"><a class="docs-heading-anchor" href="#Mixed-Units:-OffsetStringUnit">Mixed Units: OffsetStringUnit</a><a id="Mixed-Units:-OffsetStringUnit-1"></a><a class="docs-heading-anchor-permalink" href="#Mixed-Units:-OffsetStringUnit" title="Permalink"></a></h2><p>When doing arithmetic between a <code>StringUnit</code> and an ordinary <code>Integer</code>, which side of the operation has the <code>StringUnit</code> is significant.  If the <code>Integer</code> is on the right hand side, we decide that the operation should be in terms of the unit:</p><pre><code class="language-julia-repl hljs">julia&gt; 2gr + 4
+6gr
+
+julia&gt; 6gr - 2
+4gr
+
+julia&gt; 8gr ÷ 2
+4gr
+
+julia&gt; 2gr * 4
+8gr
+
+julia&gt; 7gr % 3
+1gr</code></pre><p>However, if the Integer is on the left hand side, we assume it&#39;s a native offset into the string, perhaps returned by a regex, <code>findfirst|last</code>, or any number of other functions.</p><pre><code class="language-julia-repl hljs">julia&gt; 2 + 4gr
+2cu + 4gr
+
+julia&gt; 6 - 2gr
+ERROR: MethodError: no method matching -(::Int64, ::StringUnits.GraphemeUnit)
+[...]
+
+julia&gt; 8 ÷ 2gr
+ERROR: MethodError: no method matching div(::Int64, ::StringUnits.GraphemeUnit, ::RoundingMode{:ToZero})
+
+julia&gt; 2 * 4gr
+ERROR: MethodError: no method matching *(::Int64, ::StringUnits.GraphemeUnit)
+
+julia&gt; 7 % 3gr
+ERROR: MethodError: no method matching rem(::Int64, ::StringUnits.GraphemeUnit)</code></pre><p>There isn&#39;t a coherent interpretation of &quot;byte offset 8 divided by two graphemes&quot;, nor for multiplication or remainder.</p><p>On the other hand, &quot;byte offset six minus two graphemes&quot; does have a reasonable interpretation: &quot;find the index for the grapheme two graphemes before offset six&quot;. This is currently illegal, because implementing negative-valued StringUnits requires unique algorithms for resolving the offset, complicating an already rather complex implementation, especially where graphemes are concerned.  It is a long-term goal of the package to support every combination which makes sense, and that does include negatively-valued offset string types.</p><p>Speaking of which, let&#39;s take another look at the legal operation from above.</p><pre><code class="language-julia-repl hljs">julia&gt; 2 + 4gr
+2cu + 4gr</code></pre><p>This is a StringUnit of mixed type, an <code>OffsetStringUnit</code>.  Read this as &quot;the index of the fourth grapheme after the second codeunit&quot;.  The &#39;raw&#39; byte offset is cast to <code>cu</code>, a <code>CodeunitUnit</code>, because it&#39;s expressed in terms of codeunits. Between disparate <code>StringUnit</code> types, the only valid operation is addition.</p><p>Units may be mixed (by addition) arbitrarily. The rule is &quot;we do what makes sense&quot;, and is easier to first illustrate and then explain.</p><pre><code class="language-julia-repl hljs">julia&gt; 3ch + 4gr
+3ch + 4gr
+
+julia&gt; 3ch + (4ch + 4gr)
+7ch + 4gr
+
+julia&gt; 3ch + 4gr + 4ch
+3ch + 4gr + 4ch</code></pre><p>Think of a chain of additions as instructions for finding the associated offset, starting from <code>[1]</code>: &quot;forward third characters then four graphemes forward&quot;, &quot;forward three characters, forward four characters, forward four graphemes&quot;, &quot;forward three characters, forward four graphemes, forward four characters&quot;.</p><p>You can see that the second of these can be partially elided to &quot;forward seven characters&quot;, but the latter can&#39;t be simplified in the same way.</p><p>Disparate units are supported to an arbitrary degree:</p><pre><code class="language-julia-repl hljs">julia&gt; 4cu + 3ch + 1cu + 3tw + 8gr + 2ch
+4cu + 3ch + 1cu + 3tw + 8gr + 2ch</code></pre><p>There&#39;s little to no practical use to such complex chains, but supporting the simple cases means that the complex ones come along for the ride.</p><p>The return value of an <code>OffsetStringUnit</code> is that indicated by the final unit in the chain:</p><pre><code class="language-julia-repl hljs">julia&gt; ref[4ch + 1gr]
+&quot;🫶🏼&quot;
+
+julia&gt; ref[4gr + 1ch]
+&#39;🫶&#39;: Unicode U+1FAF6 (category So: Symbol, other)
+
+julia&gt; ref[4gr + 1cu]
+0x9f</code></pre><p>This return value may be determined for any subclass of <code>AbstractStringUnit</code> using <code>StringUnits.stringunittype</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; StringUnits.stringunittype(1ch)
+StringUnits.CharUnit
+
+julia&gt; StringUnits.stringunittype(1ch+1gr)
+StringUnits.GraphemeUnit
+
+julia&gt; StringUnits.stringunittype(1ch+1gr:5+1tw)
+StringUnits.TextWidthUnit</code></pre><p>If you would prefer a different sort of return value at a given index, add a 0-width unit of that type.</p><pre><code class="language-julia-repl hljs">julia&gt; ref[5ch]
+&#39;🫶&#39;: Unicode U+1FAF6 (category So: Symbol, other)
+
+julia&gt; ref[5ch + 0gr]
+&quot;🫶🏼&quot;</code></pre><p>This is particularly convenient for use with a precalculated base offset.</p><pre><code class="language-julia-repl hljs">julia&gt; ref[11 + 0gr]
+&quot;🫶🏼&quot;</code></pre><h2 id="StringUnitRange"><a class="docs-heading-anchor" href="#StringUnitRange">StringUnitRange</a><a id="StringUnitRange-1"></a><a class="docs-heading-anchor-permalink" href="#StringUnitRange" title="Permalink"></a></h2><p>In addition to indexing, <code>StringUnits</code> may be used as ranges, to return a slice or SubString.</p><pre><code class="language-julia-repl hljs">julia&gt; ref = &quot;😻🫶🏼😸🫶🏼😹🫶🏼&quot;
+&quot;😻🫶🏼😸🫶🏼😹🫶🏼&quot;
+
+julia&gt; ref[3gr:5gr]
+&quot;😸🫶🏼😹&quot;
+
+julia&gt; ref[4ch:5gr]
+&quot;😸🫶🏼😹&quot;
+
+julia&gt; ref[4ch:6ch]
+&quot;😸🫶🏼&quot;
+
+julia&gt; ref[4ch:7ch]
+&quot;😸🫶🏼😹&quot;
+
+julia&gt; ref[1:3gr]
+&quot;😻🫶🏼😸&quot;
+
+julia&gt; ref[4ch:3gr]
+&quot;😸&quot;
+
+julia&gt; ref[6ch:3gr]
+&quot;&quot;
+
+julia&gt; ref[4ch:4ch+3gr]
+&quot;😸🫶🏼😹🫶🏼&quot;
+
+julia&gt; typeof(ans)
+String
+
+julia&gt; @view ref[4ch:4ch+3gr]
+&quot;😸🫶🏼😹🫶🏼&quot;
+
+julia&gt; typeof(ans)
+SubString{String}</code></pre><p>Straightforward enough. Let&#39;s take a brief look under the hood.</p><pre><code class="language-julia-repl hljs">julia&gt; 4ch:5gr
+(4ch + 0gr):(0ch + 5gr)
+
+julia&gt; 4ch:4ch+3gr
+(4ch + 0gr):(4ch + 3gr)
+
+julia&gt; 17:3ch
+(17cu + 0ch):(0cu + 3ch)
+
+julia&gt; 8tw:1tw
+8tw:1tw</code></pre><p>One of the things this illustrates is that <code>StringUnitRange</code>s are never simplified, in contrast to the ordinary sort of UnitRange:</p><pre><code class="language-julia-repl hljs">julia&gt; 5:1
+5:4
+
+julia&gt; isempty(5:1)
+true</code></pre><p>This is true even when we can statically determine that the span must be empty.</p><p>The reasoning is that it&#39;s better to have consistent behavior, and for some number of ranges of disparate units, they could describe a slice with contents at one offset of a string, and be empty at a different offset.</p><p><code>StringUnits</code> does fast-path empty units of the same type, since <code>5gr:3gr</code> will never have contents, and <code>isempty</code> works out of the box on these.  But be cautious: comparison of disparate units isn&#39;t supported, so don&#39;t call this function on a range without knowing the types of that range.</p><pre><code class="language-julia-repl hljs">julia&gt; isempty(5tw:1tw)
+true
+
+julia&gt; isempty(5tw:7tw)
+false
+
+julia&gt; isempty(4ch:3gr)
+ERROR: ArgumentError: can&#39;t compare lengths for offset string units</code></pre><p>This is because <code>isless</code> doesn&#39;t support an &quot;I don&#39;t know&quot; answer.  So even though we can statically determine that <code>14cu &lt; 3ch</code> is always <code>false</code>, since a Char is at most four bytes wide, we can&#39;t say the same for <code>6cu ≤ 3ch</code>: it&#39;s true for emoji and Greek, but not for ASCII.  It would be possible to return <code>missing</code> under these circumstances, but this would more than likely create more problems than just throwing an error for such comparisons.</p><p>For the more usual case of homogenous <code>StringUnitRange</code>s, the logic will reuse the count from the start unit, so if you have a very long string and index a range like <code>mylongstring[10000gr:10100gr]</code>, <code>getindex</code> will count off 10,000 graphemes, note the offset, count off an additional 100, then return the indicated slice.</p><p>The following might be obvious, but is perhaps worth noting anyway: with the exception of <code>cu</code>, all of the <code>StringUnits</code> have O(n) performance on indexing. Ranges of differing units will have to start the count over for the stop range as well.  It would be possible to optimize that case somewhat, but it would greatly add to the complexity of the implementation and is unlikely to be useful to practical programs which employ the package.</p><p>Getting better performance is more of a matter of writing an <code>AbstractString</code> subclass with a different structure, and adapting <code>StringUnits</code> to it, a project I happen to be working on.  There&#39;s some discussion of how to adapt <code>StringUnits</code> to a custom <code>AbstractString</code> subtype in the <a href="#Docstrings">docstrings</a> section.</p><h2 id="Miscellaneous"><a class="docs-heading-anchor" href="#Miscellaneous">Miscellaneous</a><a id="Miscellaneous-1"></a><a class="docs-heading-anchor-permalink" href="#Miscellaneous" title="Permalink"></a></h2><p>Methods have been implemented for Base functions which are documented to take a string and an index.</p><pre><code class="language-julia-repl hljs">julia&gt; ref =  &quot;a👍🏼a👎🏼a👍🏼a👎🏼a&quot;
+&quot;a👍🏼a👎🏼a👍🏼a👎🏼a&quot;
+
+julia&gt; ref2 = &quot;a👍a👎a👍a👎a&quot;
+&quot;a👍a👎a👍a👎a&quot;
+
+julia&gt; findnext(&#39;a&#39;, ref, 4gr)
+19
+
+julia&gt; findprev(&#39;a&#39;, ref, 8gr)
+28
+
+julia&gt; findnext(c -&gt; c == &#39;a&#39;, ref2, 6tw)
+11
+
+julia&gt; findprev(c -&gt; c == &#39;a&#39;, ref2, 11tw)
+16
+
+julia&gt; length(ref, 1ch, 4gr)
+6
+
+julia&gt; length(ref[1ch:4gr])
+6</code></pre><p>If we missed any, feel free to open an issue.</p><p>Custom functions which take a string and an index should be easy to adapt:</p><pre><code class="language-julia hljs">function mystringfn(str::AbstractString, unit::AbstractStringUnit, args...)
+    mystringfn(str, StringUnits.offsetfrom(str, unit), args...)
+end</code></pre><h2 id="Quirks"><a class="docs-heading-anchor" href="#Quirks">Quirks</a><a id="Quirks-1"></a><a class="docs-heading-anchor-permalink" href="#Quirks" title="Permalink"></a></h2><p><code>StringUnits</code> is a young package. I&#39;ve shaken out any number of bugs, and one might fairly expect that more remain.  However, it might also do things one wouldn&#39;t expect, especially when playing around with complex chains of disparate units out of curiousity.</p><p>It&#39;s easy to hit behavior which looks buggy, but is actually a consequence of how Julia deals with indices and ranges. Let&#39;s look at some examples.</p><pre><code class="language-julia-repl hljs">julia&gt; ref = &quot;🤬!🤬!&quot;
+&quot;🤬!🤬!&quot;
+
+julia&gt; ref[1]
+&#39;🤬&#39;: Unicode U+1F92C (category So: Symbol, other)
+
+julia&gt; ref[1:1]
+&quot;🤬&quot;
+
+julia&gt; ref[2]
+ERROR: StringIndexError: invalid index [2], valid nearby indices [1]=&gt;&#39;🤬&#39;, [5]=&gt;&#39;!&#39;
+[...]
+
+julia&gt; ref[1:2]
+ERROR: StringIndexError: invalid index [2], valid nearby indices [1]=&gt;&#39;🤬&#39;, [5]=&gt;&#39;!&#39;
+[...]
+
+julia&gt; ref[1:5]
+&quot;🤬!&quot;
+
+julia&gt; ref[1ch]
+&#39;🤬&#39;: Unicode U+1F92C (category So: Symbol, other)
+
+julia&gt; ref[1ch:1ch]
+&quot;🤬&quot;
+
+julia&gt; ref[1ch:1ch+1cu]
+ERROR: StringIndexError: invalid index [2], valid nearby indices [1]=&gt;&#39;🤬&#39;, [5]=&gt;&#39;!&#39;
+[...]
+
+julia&gt; ref[1ch+1cu]
+0x9f
+
+julia&gt; ref[1ch+1cu+0ch]
+ERROR: StringIndexError: invalid index [2], valid nearby indices [1]=&gt;&#39;🤬&#39;, [5]=&gt;&#39;!&#39;
+[...]</code></pre><p>It&#39;s tempting to parse <code>1ch + 1cu</code> as &quot;the first codeunit after the (end of the) first character&quot;, which would be <code>!</code>, but it&#39;s &quot;one codeunit after the (index of the) first character&quot;, which is in the middle of the <code>🤬</code>: valid to index as a <code>cu</code>, since you get a byte back, but not valid to index as a <code>ch</code>.  Practical applications of <code>StringUnits</code> are unlikely to run into problems of this sort, because units like <code>12ch + 5cu + 8gr + 4tw</code>, while they&#39;re fun to try out in the REPL, don&#39;t really represent indices or ranges which one might be looking for in a real program. Note that if a composite <code>StringUnit</code> tries to measure e.g. characters from an invalid index, this will throw an error. We felt that cases where this happens are probably erroneous, and that it is therefore more helpful to surface the error than to silently recalibrate with <code>thisind</code> or <code>nextind</code>.</p><p>This behavior is also an illustration of an advantage which semi-open intervals (which imply zero-based indexing, for reasons <a href="https://www.cs.utexas.edu/users/EWD/transcriptions/EWD08xx/EWD831.html">Edsger Dijkstra famously explained</a>) have over the closed intervals used in Julia. A string &quot;🥸!&quot;, from <code>0</code> to <code>5</code>, would be sliced thus to get the nerd out: <code>&quot;🥸!&quot;[0:4]</code>, and for the bang, <code>&quot;🥸!&quot;[4:5]</code>. The way Julia indexes strings, it has to be <code>&quot;🥸!&quot;[1:1]</code>, because <code>4</code> is inside the nerd and <code>5</code> includes the bang.  Note also that <code>4 - 0</code> is the number of codeunits in Groucho, and <code>5-4</code> the number in <code>!</code>, although Julia mitigates this problem by storing the length with the string, so interval maths can be done using <code>sizeof(str)</code>, without the performance and security (!) implications of <code>strlen</code>.</p><p>However I consider this the correct tradeoff! Julia&#39;s scheme makes life a bit harder on complex manipulation code, the sort that gets written into packages, while making life easier on user code, because <code>&quot;12345&quot;[3]</code> and <code>&quot;12345&quot;[2:3]</code> do what you&#39;d expect.</p><p>And now, with <code>StringUnits</code>, you can do these as well, with the same ease.</p><pre><code class="language-julia-repl hljs">julia&gt; &quot;१२३४५&quot;[2ch:3ch]
+&quot;२३&quot;
+
+julia&gt; &quot;1︎⃣2︎⃣3︎⃣4︎⃣5︎⃣&quot;[2gr:3gr]
+&quot;2︎⃣3&quot;
+
+julia&gt; length(ans)
+4</code></pre><p>Threw in the length there to demonstrate that, if the output appears incorrect, this is just a rendering bug.</p><h2 id="Docstrings"><a class="docs-heading-anchor" href="#Docstrings">Docstrings</a><a id="Docstrings-1"></a><a class="docs-heading-anchor-permalink" href="#Docstrings" title="Permalink"></a></h2><p><code>StringUnits</code> is (probably) not feature-complete, may have bugs, and shouldn&#39;t be considered stable in its current form.  The public interface is the exported unit types, which will retain their names and core semantics, but may give different results on a particular string in a later release, if and when we identify bugs in the implementation.  Some operations which throw errors may no longer do so.  Note that any changes in the results given by <code>textwidth</code> will change the values from <code>tw</code> accordingly, improving them in the process, we may hope.</p><p>We intend that the functions necessary to implement the <code>AbstractStringUnit</code> interface for specific subtypes of <code>AbstractString</code> will also be considered API, but as yet it&#39;s unclear which of these functions is in fact necessary. Rigorous handling of &quot;bookends&quot;, such as the values in a UnitRange, may require separating <code>offsetafter</code> into two methods.  <code>StringUnits</code> was designed in part for use with a <a href="https://en.wikipedia.org/wiki/Rope_(data_structure)">rope</a> package, which is still in development.  Adapting it to that package should provide some insight into which internal functions do in fact need adaptation to allow <code>AbstractString</code> subtypes with more efficient indexing to implement StringUnits using that more efficient indexing.</p><p>Note that, so long as they&#39;re encoded using UTF-8, existing subtypes of <code>AbstractString</code> should function with <code>StringUnits</code> as-is, with the same level of efficiency, more or less. Strings with an <code>eltype</code> which is not <code>Char</code> will probably not function correctly.  Extending methods will only be useful for those subtypes which provide sublinear performance in indexing for units other than the native byte offset.</p><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.ch" href="#StringUnits.ch"><code>StringUnits.ch</code></a> — <span class="docstring-category">Constant</span></header><section><div><p>Unit for Chars: 1ch == CharUnit(1).</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L62">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.cu" href="#StringUnits.cu"><code>StringUnits.cu</code></a> — <span class="docstring-category">Constant</span></header><section><div><p>Unit for codeunits: 1cu == CodeunitUnit(1).</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L60">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.gr" href="#StringUnits.gr"><code>StringUnits.gr</code></a> — <span class="docstring-category">Constant</span></header><section><div><p>Unit for graphemes: 1gr == GraphemeUnit(1).</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L64">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.tw" href="#StringUnits.tw"><code>StringUnits.tw</code></a> — <span class="docstring-category">Constant</span></header><section><div><p>Unit for textwidth: 1tw == TextWidthUnit(!).</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L66">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.AbstractStringUnit" href="#StringUnits.AbstractStringUnit"><code>StringUnits.AbstractStringUnit</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">AbstractStringUnit</code></pre><p>Abstract superclass of all StringUnit types.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L9-L13">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.CharUnit" href="#StringUnits.CharUnit"><code>StringUnits.CharUnit</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">CharUnit &lt;: AbstractStringUnit</code></pre><p>A unit type representing some number of Chars.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L26-L30">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.CodeunitUnit" href="#StringUnits.CodeunitUnit"><code>StringUnits.CodeunitUnit</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">CodeunitUnit &lt;: AbstractStringUnit</code></pre><p>A unit type representing some number of codeunits.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L17-L21">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.GraphemeUnit" href="#StringUnits.GraphemeUnit"><code>StringUnits.GraphemeUnit</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">GraphemeUnit &lt;: AbstractStringUnit</code></pre><p>A unit type representing some number of [<code>graphemes</code>]&#39;&#39;(@extref <code>Unicode.graphemes</code>).</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L35-L39">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.OffsetStringUnit" href="#StringUnits.OffsetStringUnit"><code>StringUnits.OffsetStringUnit</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">OffsetStringUnit{B,O} &lt;: AbstractStringUnit</code></pre><p>A composite unit type representing some total number of disparate string units, as applied in order to a given string.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L76-L81">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.StringUnitRange" href="#StringUnits.StringUnitRange"><code>StringUnits.StringUnitRange</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">StringUnitRange{S&lt;:AbstractStringUnit} &lt;: AbstractUnitRange{S}</code></pre><p>A range of string units. For efficiency, these should be of the same type, but <code>:</code> will accept disparate StringUnit types as well.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L92-L97">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.TextWidthUnit" href="#StringUnits.TextWidthUnit"><code>StringUnits.TextWidthUnit</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">CodeunitUnit &lt;: AbstractStringUnit</code></pre><p>A unit type representing a [<code>textwidth</code>]&#39;&#39;(@extref).</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L44-L48">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.grapheme_at-Union{Tuple{S}, Tuple{S, Integer}} where S&lt;:AbstractString" href="#StringUnits.grapheme_at-Union{Tuple{S}, Tuple{S, Integer}} where S&lt;:AbstractString"><code>StringUnits.grapheme_at</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">grapheme_at(str::S, i::Integer) where {S&lt;:AbstractString}</code></pre><p>Retrieve the grapheme at the given offset.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L435-L439">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.indicesfrom-Union{Tuple{S}, Tuple{AbstractString, StringUnits.StringUnitRange{S}}} where S" href="#StringUnits.indicesfrom-Union{Tuple{S}, Tuple{AbstractString, StringUnits.StringUnitRange{S}}} where S"><code>StringUnits.indicesfrom</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">indicesfrom(str::AbstractString, range::StringUnitRange{S}) where {S}</code></pre><p>Return a Tuple <code>(start, stop)</code> containing the codeunit range corresponding to <code>range</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L455-L460">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.offsetafter-Tuple{AbstractString, Integer, StringUnits.AbstractStringUnit}" href="#StringUnits.offsetafter-Tuple{AbstractString, Integer, StringUnits.AbstractStringUnit}"><code>StringUnits.offsetafter</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">offsetafter(str::AbstractString, offset::Integer unit::AbstractStringUnit)</code></pre><p>Obtain the &#39;raw&#39; offset/codeunit index <code>unit</code> count after <code>offset</code>.  String types which have more efficient ways to calculate a unit offset should define this for their <code>AbstractString</code> subtype.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L320-L326">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.offsetfrom-Tuple{AbstractString, StringUnits.AbstractStringUnit}" href="#StringUnits.offsetfrom-Tuple{AbstractString, StringUnits.AbstractStringUnit}"><code>StringUnits.offsetfrom</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">offsetfrom(str::AbstractString, unit::AbstractStringUnit)
+offsetfrom(str::AbstractString, range::StringUnitRange)</code></pre><p>Obtain the native index value or range of the <code>unit</code> or <code>range</code> for the given string <code>str</code>.  String types which have efficient ways to find this value should implement <a href="#StringUnits.offsetafter-Tuple{AbstractString, Integer, StringUnits.AbstractStringUnit}"><code>StringUnits.offsetafter</code></a>, not <code>offsetfrom</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L398-L405">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.partforoffset-Tuple{Type{&lt;:StringUnits.AbstractStringUnit}, AbstractString, Integer}" href="#StringUnits.partforoffset-Tuple{Type{&lt;:StringUnits.AbstractStringUnit}, AbstractString, Integer}"><code>StringUnits.partforoffset</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">partforoffset(::Type{&lt;:AbstractStringUnit}, str::AbstractString, idx::Integer)</code></pre><p>Retrieve a &quot;string part&quot; of the appropriate type for the <code>StringUnit</code>, at the (byte) offset <code>idx</code> into <code>str</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L425-L430">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="StringUnits.stringunittype-Union{Tuple{Union{Type{T}, T}}, Tuple{T}, Tuple{S}} where {S, T&lt;:StringUnits.StringUnitRange{S}}" href="#StringUnits.stringunittype-Union{Tuple{Union{Type{T}, T}}, Tuple{T}, Tuple{S}} where {S, T&lt;:StringUnits.StringUnitRange{S}}"><code>StringUnits.stringunittype</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">stringunittype(::Union{AbstractStringUnit,Type{AbstractStringUnit}})</code></pre><p>Determine the unit type of a given <code>AbstractStringUnit</code>.  This determines the type of the return value produced from indexing using this unit.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/mnemnion/StringUnits.jl/blob/8b96b41cb46ba4ca158a1772b944b73c5be0aab0/src/StringUnits.jl#L307-L312">source</a></section></article></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.3.0 on <span class="colophon-date" title="Sunday 24 March 2024 19:34">Sunday 24 March 2024</span>. Using Julia version 1.10.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
