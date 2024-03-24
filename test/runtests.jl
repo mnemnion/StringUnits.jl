@@ -27,6 +27,22 @@ import Base.Unicode: graphemes
         @test_throws ArgumentError (4gr + 3cu) ÷ 4
         @test_throws ArgumentError (4gr + 3cu) * 5
         @test_throws ArgumentError (4gr + 3cu) % 5
+        @test_throws DomainError 4gr - 8gr
+        @test 4gr - 4gr == 0gr
+        @test_throws ArgumentError 4gr < 5cu
+        @test_throws ArgumentError 120gr > 2cu  # even though...
+    end
+    @testset "Bounds Errors" begin
+        str = "abc"
+        @test_throws BoundsError str[0cu]
+        @test_throws BoundsError str[0ch]
+        @test_throws BoundsError str[0tw]
+        @test_throws BoundsError str[0gr]
+        @test_throws BoundsError   str[0cu+0ch+0tw+0gr]
+        @test_throws BoundsError str[4cu]
+        @test_throws BoundsError str[4ch]
+        @test_throws BoundsError str[4tw]
+        @test_throws BoundsError str[4gr]
     end
 
     @testset "Indexing" begin
@@ -52,6 +68,9 @@ import Base.Unicode: graphemes
         @test_throws BoundsError ref[0gr]
         @test_throws BoundsError ref[0tw]
         @test ref[1cu + 0gr] == ref[0cu + 1gr]
+        ref = "😻🫶🏼😸🫶🏼😹🫶🏼";
+        @test ref[2ch + 0cu + 0ch + 0gr] == "🫶🏼"
+        @test ref[2ch + (0cu + 0ch + 0gr)] == "🫶🏼"
     end
 
     @testset "Comparisons and Identities" begin
@@ -59,10 +78,16 @@ import Base.Unicode: graphemes
         @test iszero(0ch)
         @test iszero(0gr)
         @test iszero(0tw)
+        @test iszero(0tw + 0gr)
         @test zero(1cu) == 0cu
         @test zero(1ch) == 0ch
         @test zero(1gr) == 0gr
         @test zero(1tw) == 0tw
+        @test one(5cu) == 1cu
+        @test one(5ch) == 1ch
+        @test one(5tw) == 1tw
+        @test one(5gr) == 1gr
+        @test one(1cu + 5gr) == 0cu + 1gr
     end
 
     @testset "Heterogenous Addition" begin
@@ -75,7 +100,7 @@ import Base.Unicode: graphemes
         @test 4tw + 1gr + 3 == 4tw + 4gr
     end
 
-    @testset "Slicing" begin
+    @testset "Slicing and Length" begin
         # H̸̡̪̯ͨ͊̽̅̾̎Ȩ̬̩̾͛ͪ̈́̀́͘ ̶̧̨̱̹̭̯ͧ̾ͬC̷̙̲̝͖ͭ̏ͥͮ͟Oͮ͏̮̪̝͍M̲̖͊̒ͪͩͬ̚̚͜Ȇ̴̟̟͙̞ͩ͌͝S̨̥̫͎̭ͯ̿̔̀ͅ
         ref = "γδgdȧ̶̢̧̡̧̢̨̡̨̢̧̨̨̢̛̛̛̛̟̤̭̞̙̘̜̫͖̠͍̠̙̹̻͙͕̯̭͕̞̰͖̮̟̮͙̠̙̹̤̖͖̟̜̣̠̜̜̠̜̤̦̪͖̺͓̠͉̘̩̠̯̖͙̦̙̖͖͚̥̳̗͕͈̦͎̻͈̞͉̰͖̦̟̿̂̒͛̎̏͋̌̔̌̀̽́̎̑̊̐͛̊͋͆̀͒̈̄͂̑̉̌̀́͆̎͛̋͒̆̐̔́̊̄͐̑̓̍̽̊̀́̓̅̾̍͐̆̿͛̾̉̒̈̃̽͛́͗͗̇̈̔̄̂͒̌̿̍̉̐̒̒͑̀̇̽̇̌̅̒̚̕̕͜͝͝͠ͅ💬w➔!"
         @test sizeof(ref) == 398
@@ -102,9 +127,30 @@ import Base.Unicode: graphemes
         @test ref[4ch:4ch + 1gr] == "dȧ̶̢̧̡̧̢̨̡̨̢̧̨̨̢̛̛̛̛̟̤̭̞̙̘̜̫͖̠͍̠̙̹̻͙͕̯̭͕̞̰͖̮̟̮͙̠̙̹̤̖͖̟̜̣̠̜̜̠̜̤̦̪͖̺͓̠͉̘̩̠̯̖͙̦̙̖͖͚̥̳̗͕͈̦͎̻͈̞͉̰͖̦̟̿̂̒͛̎̏͋̌̔̌̀̽́̎̑̊̐͛̊͋͆̀͒̈̄͂̑̉̌̀́͆̎͛̋͒̆̐̔́̊̄͐̑̓̍̽̊̀́̓̅̾̍͐̆̿͛̾̉̒̈̃̽͛́͗͗̇̈̔̄̂͒̌̿̍̉̐̒̒͑̀̇̽̇̌̅̒̚̕̕͜͝͝͠ͅ"
         @test ref[5ch:5ch + 0gr] == "ȧ̶̢̧̡̧̢̨̡̨̢̧̨̨̢̛̛̛̛̟̤̭̞̙̘̜̫͖̠͍̠̙̹̻͙͕̯̭͕̞̰͖̮̟̮͙̠̙̹̤̖͖̟̜̣̠̜̜̠̜̤̦̪͖̺͓̠͉̘̩̠̯̖͙̦̙̖͖͚̥̳̗͕͈̦͎̻͈̞͉̰͖̦̟̿̂̒͛̎̏͋̌̔̌̀̽́̎̑̊̐͛̊͋͆̀͒̈̄͂̑̉̌̀́͆̎͛̋͒̆̐̔́̊̄͐̑̓̍̽̊̀́̓̅̾̍͐̆̿͛̾̉̒̈̃̽͛́͗͗̇̈̔̄̂͒̌̿̍̉̐̒̒͑̀̇̽̇̌̅̒̚̕̕͜͝͝͠ͅ"
         @test ref[1ch + 1tw + 1gr + 1cu:4gr] == "d"
-        @test twref[1ch + 2tw + 1cu + 1gr:5gr] == "w🤔→"
+        @test twref[1ch + 2tw + 4cu + 1gr:5gr] == "🤔→"
         @test twref[2ch + 0cu] == 0xf0
         @test twref[2ch + 0cu] isa UInt8
         @test_throws StringIndexError twref[1ch + 2tw:2ch + 1cu]
+        @test length(ref, 5gr, 5gr) == 192
+        @test length(ref, 1ch, 4ch) == 4
+        for i in eachindex(ref)
+            @test ref[i] == ref[i + 0ch]
+            @test length(ref, 1ch, i + 0ch) == length(@view ref[begin:i])
+        end
+    end
+
+    @testset "Find previous and next" begin
+        ref =  "a👍🏼a👎🏼a👍🏼a👎🏼a"
+        ref2 = "a👍a👎a👍a👎a"
+        @test findnext('a', ref, 4gr) == 19
+        @test ref[19] == 'a'
+        @test findprev('a', ref, 8gr) == 28
+        @test ref[28] == 'a'
+        @test findnext(c -> c == 'a', ref, 4gr) == 19
+        @test findprev(c -> c == 'a', ref, 8gr) == 28
+        @test findnext(c -> c == 'a', ref2, 6tw) == 11
+        @test ref2[11] == 'a'
+        @test findprev(c -> c == 'a', ref2, 11tw) == 16
+        @test ref2[16] == 'a'
     end
 end

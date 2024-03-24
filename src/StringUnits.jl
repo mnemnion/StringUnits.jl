@@ -35,7 +35,7 @@ end
 """
     GraphemeUnit <: AbstractStringUnit
 
-A unit type representing some number of [`graphemes`](@extref `Unicode.graphemes`).
+A unit type representing some number of [`graphemes`]''(@extref `Unicode.graphemes`).
 """
 struct GraphemeUnit <: AbstractStringUnit
     index::Int
@@ -44,7 +44,7 @@ end
 """
     CodeunitUnit <: AbstractStringUnit
 
-A unit type representing a [`textwidth`](@extref).
+A unit type representing a [`textwidth`]''(@extref).
 """
 struct TextWidthUnit <: AbstractStringUnit
     index::Int
@@ -57,13 +57,13 @@ struct CharUnitMaker end
 struct GraphemeUnitMaker end
 struct TextWidthUnitMaker end
 
-"""Unit for codeunits: 1cu."""
+"""Unit for codeunits: 1cu == CodeunitUnit(1)."""
 const cu = CodeunitUnitMaker()
-"""Unit for Chars: 1ch."""
+"""Unit for Chars: 1ch == CharUnit(1)."""
 const ch = CharUnitMaker()
-"""Unit for graphemes: 1gr."""
+"""Unit for graphemes: 1gr == GraphemeUnit(1)."""
 const gr = GraphemeUnitMaker()
-"""Unit for textwidth: 1tw."""
+"""Unit for textwidth: 1tw == TextWidthUnit(!)."""
 const tw = TextWidthUnitMaker()
 
 Base.:*(i::Integer, ::CodeunitUnitMaker) = CodeunitUnit(i)
@@ -108,7 +108,7 @@ function StringUnitRange(start::SR, stop::SP) where {SR<:AbstractStringUnit,SP<:
     start = StringUnitRange(OffsetStringUnit(start, zero(SP)), OffsetStringUnit(zero(SR), stop))
 end
 
-# Operations
+# Operators
 
 function Base.:+(a::SU, b::SU) where {SU<:AbstractStringUnit}
     SU(a.index + b.index)
@@ -158,16 +158,18 @@ function Base.:+(a::Integer, b::SU) where {SU<:AbstractStringUnit}
 end
 
 function Base.:-(a::SU, b::SU) where {SU<:AbstractStringUnit}
+    a.index < b.index && throw(DomainError("illegal subtraction $a < $b"))
     SU(a.index - b.index)
 end
 
 function Base.:-(a::SU, b::Integer) where {SU<:AbstractStringUnit}
+    a.index < b && throw(DomainError("illegal subtraction $a < $b"))
     SU(a.index - b)
 end
 
-function Base.:-(a::SU) where {SU<:AbstractStringUnit}
-    SU(-a.index)
-end
+Base.:-(::OffsetStringUnit, ::OffsetStringUnit) = throw(ArgumentError("Can't subtract with OffsetStringUnits"))
+Base.:-(::AbstractStringUnit, ::OffsetStringUnit) = throw(ArgumentError("Can't subtract with OffsetStringUnits"))
+Base.:-(::OffsetStringUnit, ::AbstractStringUnit) = throw(ArgumentError("Can't subtract with OffsetStringUnits"))
 
 function Base.:*(a::SU, b::SU) where {SU<:AbstractStringUnit}
     SU(a.index * b.index)
@@ -221,7 +223,7 @@ Base.isless(a::SU, b::SU) where {SU<:AbstractStringUnit} = a.index < b.index
 Base.isless(::OffsetStringUnit, ::AbstractStringUnit) = throw(ArgumentError("can't compare lengths for offset string units"))
 Base.isless(::AbstractStringUnit, ::OffsetStringUnit) = throw(ArgumentError("can't compare lengths for offset string units"))
 Base.isless(::OffsetStringUnit, ::OffsetStringUnit) = throw(ArgumentError("can't compare lengths for offset string units"))
-function Base.isless(a::SU, b::SV) where {SU<:AbstractStringUnit, SV<:AbstractStringUnit}
+function Base.isless(::SU, ::SV) where {SU<:AbstractStringUnit, SV<:AbstractStringUnit}
     throw(ArgumentError("can't compare lengths of $SU and $SV"))
 end
 
@@ -275,6 +277,38 @@ function Base.view(str::AbstractString, range::StringUnitRange)
     Base.maybeview(str, range)
 end
 
+function Base.findnext(pattern, str::AbstractString, unit::AbstractStringUnit)
+    findnext(pattern, str, offsetfrom(str, unit))
+end
+
+function Base.findprev(pattern, str::AbstractString, unit::AbstractStringUnit)
+    findprev(pattern, str, offsetfrom(str, unit))
+end
+
+function Base.findnext(pattern::Base.RegexAndMatchData, str::AbstractString, unit::AbstractStringUnit)
+    findnext(pattern, str, offsetfrom(str, unit))
+end
+
+function Base.findnext(λ::Function, str::AbstractString, unit::AbstractStringUnit)
+    findnext(λ, str, offsetfrom(str, unit))
+end
+
+function Base.findprev(λ::Function, str::AbstractString, unit::AbstractStringUnit)
+    findprev(λ, str, offsetfrom(str,unit))
+end
+
+function Base.length(str::AbstractString, i::AbstractStringUnit, j::AbstractStringUnit)
+    return length(str, indicesfrom(str, i:j)...)
+end
+
+function Base.length(str::AbstractString, i::Integer, j::AbstractStringUnit)
+    return length(str, indicesfrom(str, i:j)...)
+end
+
+function Base.length(str::AbstractString, i::AbstractStringUnit, j::Integer)
+    return length(str, indicesfrom(str, i:j)...)
+end
+
 # Conversion to offset
 
 """
@@ -306,6 +340,9 @@ function offsetafter(str::S, off::Integer, unit::GraphemeUnit) where {S<:Abstrac
     idx = off
     while true
         idx = nextind(str, idx)
+        if idx > ncodeunits(str) && n == 0
+            return prevind(str, idx)
+        end
         @boundscheck idx > ncodeunits(str) && throw(BoundsError(str, idx))
         c = str[idx]
         if isgraphemebreak!(state, c0, c)
@@ -375,6 +412,16 @@ function partforoffset(::Type{GraphemeUnit}, str::AbstractString, idx::Integer)
     grapheme_at(str, idx)
 end
 
+function partforoffset(::Type{OffsetStringUnit{SI,SO}}, str::AbstractString, idx::Integer) where {SI,SO}
+    partforoffset(SO, str, idx)
+end
+
+"""
+    partforoffset(::Type{<:AbstractStringUnit}, str::AbstractString, idx::Integer)
+
+Retrieve a "string part" of the appropriate type for the `StringUnit`, at the (byte)
+offset `idx` into `str`.
+"""
 function partforoffset(::Type{<:AbstractStringUnit}, str::AbstractString, idx::Integer)
     str[idx]
 end
@@ -382,9 +429,7 @@ end
 """
     grapheme_at(str::S, i::Integer) where {S<:AbstractString}
 
-Retrieve the grapheme at the given offset.  String types which
-have a faster way to find a grapheme index should implement this
-for their type.
+Retrieve the grapheme at the given offset.
 """
 function grapheme_at(str::S, i::Integer) where {S<:AbstractString}
     c0 = str[i]
