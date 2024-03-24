@@ -247,9 +247,6 @@ Base.:(:)(a::AbstractStringUnit, b::AbstractStringUnit) = StringUnitRange(a,b)
 Base.:(:)(a::AbstractStringUnit, b::Integer) = StringUnitRange(a,CodeunitUnit(b))
 Base.:(:)(a::Integer, b::AbstractStringUnit) = StringUnitRange(CodeunitUnit(a), b)
 
-Base.eltype(::Union{T,Type{T}}) where {T<:StringUnitRange{S}} where {S} = S
-Base.eltype(::Union{T,Type{T}}) where {T<:StringUnitRange{S}} where {S<:OffsetStringUnit{B,I}} where {B,I} = I
-
 function Base.getindex(str::AbstractString, unit::SU) where {SU<:AbstractStringUnit}
     partforoffset(SU, str, offsetfrom(str, unit))
 end
@@ -278,23 +275,23 @@ function Base.view(str::AbstractString, range::StringUnitRange)
 end
 
 function Base.findnext(pattern, str::AbstractString, unit::AbstractStringUnit)
-    findnext(pattern, str, offsetfrom(str, unit))
+    Base.findnext(pattern, str, offsetfrom(str, unit))
 end
 
 function Base.findprev(pattern, str::AbstractString, unit::AbstractStringUnit)
-    findprev(pattern, str, offsetfrom(str, unit))
+    Base.findprev(pattern, str, offsetfrom(str, unit))
 end
 
 function Base.findnext(pattern::Base.RegexAndMatchData, str::AbstractString, unit::AbstractStringUnit)
-    findnext(pattern, str, offsetfrom(str, unit))
+    Base.findnext(pattern, str, offsetfrom(str, unit))
 end
 
 function Base.findnext(λ::Function, str::AbstractString, unit::AbstractStringUnit)
-    findnext(λ, str, offsetfrom(str, unit))
+    Base.findnext(λ, str, offsetfrom(str, unit))
 end
 
 function Base.findprev(λ::Function, str::AbstractString, unit::AbstractStringUnit)
-    findprev(λ, str, offsetfrom(str,unit))
+    Base.findprev(λ, str, offsetfrom(str,unit))
 end
 
 function Base.length(str::AbstractString, i::AbstractStringUnit, j::AbstractStringUnit)
@@ -308,6 +305,19 @@ end
 function Base.length(str::AbstractString, i::AbstractStringUnit, j::Integer)
     return length(str, indicesfrom(str, i:j)...)
 end
+
+# Type of resulting unit
+
+"""
+    stringunittype(::Union{AbstractStringUnit,Type{AbstractStringUnit}})
+
+Determine the unit type of a given `AbstractStringUnit`.  This determines
+the type of the return value produced from indexing using this unit.
+"""
+stringunittype(::Union{T,Type{T}}) where {T<:StringUnitRange{S}} where {S} = S
+stringunittype(::Union{T,Type{T}}) where {T<:StringUnitRange{S}} where {S<:OffsetStringUnit{B,I}} where {B,I} = stringunittype(I)
+stringunittype(::Union{T,Type{T}}) where {T<:AbstractStringUnit} = T
+stringunittype(::Union{T,Type{T}}) where {T<:OffsetStringUnit{SI,SO}} where {SI,SO} = stringunittype(SO)
 
 # Conversion to offset
 
@@ -453,8 +463,8 @@ Return a Tuple `(start, stop)` containing the codeunit range corresponding
 to `range`.
 """
 function indicesfrom(str::AbstractString, range::StringUnitRange{S}) where {S}
-    # StringUnitRanges of heterogeneous type have the eltype of the stop unit
-    if eltype(range) == S
+    # StringUnitRanges of heterogeneous type have the stringunittype of the stop unit
+    if stringunittype(range) == S
         range.stop < range.start && return 1, 0
         start = offsetfrom(str, range.start)
         stop = offsetafter(str, start, range.stop - range.start)
@@ -462,7 +472,7 @@ function indicesfrom(str::AbstractString, range::StringUnitRange{S}) where {S}
     else
         start = offsetfrom(str, range.start)
         stop = offsetfrom(str, range.stop)
-        if eltype(range) <: GraphemeUnit
+        if stringunittype(range) <: GraphemeUnit
             stop = offsetafter(str, stop, zero(GraphemeUnit))
         end
         if start > stop
