@@ -20,4 +20,6 @@ makedocs(;
 deploydocs(;
     repo="github.com/mnemnion/StringUnits.jl",
     devbranch="trunk",
+    branch="gh-pages",
+    versions=["stable" => "v^", "v#.#"],
 )

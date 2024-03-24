@@ -13,6 +13,7 @@ concurrency:
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
   run:
+    name: StringUnits Codecov
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
