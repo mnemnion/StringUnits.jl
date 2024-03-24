@@ -1,12 +1,21 @@
-using StringUnits
-import StringUnits: stringunittype
-using Test
-using Aqua
 import Base.Unicode: graphemes
+import StringUnits: CharUnit, CharUnitMaker, CodeunitUnit, CodeunitUnitMaker, GraphemeUnit,
+    GraphemeUnitMaker, TextWidthUnit, TextWidthUnitMaker, stringunittype
+
+using Aqua
+using StringUnits
+using Test
 
 @testset "StringUnits.jl" begin
     @testset "Code quality (Aqua.jl)" begin
         Aqua.test_all(StringUnits)
+    end
+
+    @testset "Fundamentals" begin
+        @test CodeunitUnit(1) == 1 * CodeunitUnitMaker() == 1cu
+        @test CharUnit(1) == 1 * CharUnitMaker() == 1ch
+        @test TextWidthUnit(1) == 1 * TextWidthUnitMaker() == 1tw
+        @test GraphemeUnit(1) == 1 * GraphemeUnitMaker() == 1gr
     end
 
     @testset "Base prerequisites and assumptions" begin
@@ -29,9 +38,15 @@ import Base.Unicode: graphemes
         @test_throws ArgumentError (4gr + 3cu) * 5
         @test_throws ArgumentError (4gr + 3cu) % 5
         @test_throws DomainError 4gr - 8gr
-        @test 4gr - 4gr == 0gr
         @test_throws ArgumentError 4gr < 5cu
         @test_throws ArgumentError 120gr > 2cu  # even though...
+        @test_throws DomainError 5ch - 6ch
+        @test_throws ArgumentError (1cu + 2tw) - 4gr
+        @test_throws ArgumentError 1cu - (2tw + 4gr)
+        @test_throws ArgumentError (1cu + 1tw) - (1cu + 1tw)
+        @test_throws ArgumentError 3gr < 4tw
+        @test_throws ArgumentError 3gr + 0cu < 4tw
+        @test_throws ArgumentError 3gr < 4tw + 0cu
     end
     @testset "Bounds Errors" begin
         str = "abc"
@@ -84,14 +99,30 @@ import Base.Unicode: graphemes
         @test zero(1ch) == 0ch
         @test zero(1gr) == 0gr
         @test zero(1tw) == 0tw
+        @test typemin(1tw) == zero(1tw) == zero(TextWidthUnit)
         @test one(5cu) == 1cu
         @test one(5ch) == 1ch
         @test one(5tw) == 1tw
         @test one(5gr) == 1gr
         @test one(1cu + 5gr) == 0cu + 1gr
+        @test oneunit(5gr) == one(7gr)
+        @test oneunit(1cu + 5gr) == one(1cu + 5gr)
     end
 
-    @testset "Heterogenous Addition" begin
+    @testset "StringUnits Arithmetic" begin
+        @test (0cu + 1gr) + 1gr == 0cu + 2gr
+        @test (1cu + 0gr) + (3cu + 1gr) == 4cu + 1gr
+        @test (1tw + 3ch) + (0tw + 4ch) == 1tw + 7ch
+        @test (1tw + 1ch) + (1tw + 1ch) == (1tw + 1ch) + (1tw + 1ch)
+        @test 4gr - 4gr == 0gr
+        @test 5ch + (1ch + 1gr) == 6ch + 1gr
+        @test 5ch - 4ch == 1ch
+        @test 5gr * 5gr == 25gr
+        @test 5gr * 5 == 5gr * 5gr
+        @test 6gr ÷ 2gr == 3gr
+        @test 6gr ÷ 2 == 6gr ÷ 2gr
+        @test 7gr % 3gr == 1gr
+        @test 7gr % 3 == 7gr % 3gr
         @test repr(1 + 1gr + 1gr) == "1cu + 2gr"
         @test repr(3 + 1gr + 1tw) == "3cu + 1gr + 1tw"
         @test repr(1gr) == "1gr"
@@ -131,6 +162,8 @@ import Base.Unicode: graphemes
         @test twref[1ch + 2tw + 4cu + 1gr:5gr] == "🤔→"
         @test twref[2ch + 0cu] == 0xf0
         @test twref[2ch + 0cu] isa UInt8
+        @test "abcd"[1cu:3] == "abc"
+        @test repr(4cu:6ch) == "(4cu + 0ch):(0cu + 6ch)"
         @test_throws StringIndexError twref[1ch + 2tw:2ch + 1cu]
         @test length(ref, 5gr, 5gr) == 192
         @test length(ref, 1ch, 4ch) == 4
