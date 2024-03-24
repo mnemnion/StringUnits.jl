@@ -274,16 +274,12 @@ function Base.view(str::AbstractString, range::StringUnitRange)
     Base.maybeview(str, range)
 end
 
-function Base.findnext(pattern, str::AbstractString, unit::AbstractStringUnit)
+function Base.findnext(pattern::Union{AbstractString,AbstractChar,AbstractPattern}, str::AbstractString, unit::AbstractStringUnit)
     Base.findnext(pattern, str, offsetfrom(str, unit))
 end
 
 function Base.findprev(pattern, str::AbstractString, unit::AbstractStringUnit)
     Base.findprev(pattern, str, offsetfrom(str, unit))
-end
-
-function Base.findnext(pattern::Base.RegexAndMatchData, str::AbstractString, unit::AbstractStringUnit)
-    Base.findnext(pattern, str, offsetfrom(str, unit))
 end
 
 function Base.findnext(λ::Function, str::AbstractString, unit::AbstractStringUnit)
