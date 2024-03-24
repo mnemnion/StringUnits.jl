@@ -1,4 +1,5 @@
 using StringUnits
+import StringUnits: stringunittype
 using Test
 using Aqua
 import Base.Unicode: graphemes
@@ -152,5 +153,15 @@ import Base.Unicode: graphemes
         @test ref2[11] == 'a'
         @test findprev(c -> c == 'a', ref2, 11tw) == 16
         @test ref2[16] == 'a'
+    end
+    @testset "StringUnit stringunittype" begin
+        @test stringunittype(1cu) == StringUnits.CodeunitUnit
+        @test stringunittype(2ch) == StringUnits.CharUnit
+        @test stringunittype(3gr) == StringUnits.GraphemeUnit
+        @test stringunittype(4tw) == StringUnits.TextWidthUnit
+        @test stringunittype(1cu + 3gr) == StringUnits.GraphemeUnit
+        @test stringunittype(1:4tw) == StringUnits.TextWidthUnit
+        @test stringunittype(1gr:2gr) == StringUnits.GraphemeUnit
+        @test stringunittype(1cu+3ch:3tw+4gr) == StringUnits.GraphemeUnit
     end
 end
