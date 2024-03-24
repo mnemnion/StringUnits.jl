@@ -48,7 +48,8 @@ julia> ref[5gr]
 String units of a common type support normal arithmetic for natural numbers.  Meaning
 that subtraction which would result in a negative value is an error, like dividing by
 zero.  Julia doesn't use the convention that negative-valued string indices count
-from the end of the string, so `StringUnits` doesn't either.
+from the end of the string, so `StringUnits` doesn't either.  We allow zero units,
+for reasons which will become clear shortly.
 
 ```jldoctest
 julia> 2ch + 4ch
@@ -161,6 +162,12 @@ Think of a chain of additions as instructions for finding the associated offset,
 You can see that the second of these can be partially elided to "forward seven
 characters", but the latter can't be simplified in the same way.
 
+!!! note "Abuse of Notation"
+    A few of you are squirming in your chairs at this point. Yes, 'addition' of heterogeneous `StringUnits` doesn't commute. Yes, this is abuse of notation.
+    Yes, I'm interested in your breakdown of the real analysis of StringUnit
+    metrics, including a notation.  No, I won't change StringUnits to use it.
+    Yes, I would more-than-likely link to your contribution.
+
 Disparate units are supported to an arbitrary degree:
 
 ```jldoctest
@@ -208,7 +215,7 @@ julia> ref[5ch + 0gr]
 "🫶🏼"
 ```
 
-This is particularly convenient for use with a precalculated base offset.
+This is particularly convenient for use with an existing base offset.
 
 ```jldoctest stringunits1
 julia> ref[11 + 0gr]
@@ -286,9 +293,9 @@ true
 
 This is true even when we can statically determine that the span must be empty.
 
-The reasoning is that it's better to have consistent behavior, and for some number of
-ranges of disparate units, they could describe a slice with contents at one offset of
-a string, and be empty at a different offset.
+The reasoning is that it's better to have consistent behavior, and for some ranges of
+disparate units, they could describe a slice with contents at one offset of a string,
+and be empty at a different offset.
 
 `StringUnits` does fast-path empty units of the same type, since `5gr:3gr` will never
 have contents, and `isempty` works out of the box on these.  But be cautious:
@@ -307,8 +314,8 @@ ERROR: ArgumentError: can't compare lengths for offset string units
 ```
 
 This is because `isless` doesn't support an "I don't know" answer.  So even though we
-can statically determine that `14cu < 3ch` is always `false`, since a Char is at most
-four bytes wide, we can't say the same for `6cu ≤ 3ch`: it's true for emoji and
+can statically determine that `14cu < 3ch` is always `false`, since a `Char` is at
+most four bytes wide, we can't say the same for `6cu ≤ 3ch`: it's true for emoji and
 Greek, but not for ASCII.  It would be possible to return `missing` under these
 circumstances, but this would more than likely create more problems than just
 throwing an error for such comparisons.
@@ -420,16 +427,17 @@ ERROR: StringIndexError: invalid index [2], valid nearby indices [1]=>'🤬', [5
 ```
 
 It's tempting to parse `1ch + 1cu` as "the first codeunit after the (end of the)
-first character", which would be `!`, but it's "one codeunit after the (index of the)
-first character", which is in the middle of the `🤬`: valid to index as a `cu`, since
-you get a byte back, but not valid to index as a `ch`.  Practical applications of
-`StringUnits` are unlikely to run into problems of this sort, because units like
+first character", which would be `!` (`0x21`), but it's "one codeunit after the
+(index of the) first character", which is inside of `🤬`: valid to index as a `cu`,
+since you get a byte back, but not valid to index as a `ch`.  Practical applications
+of `StringUnits` are unlikely to run into problems of this sort, because units like
 `12ch + 5cu + 8gr + 4tw`, while they're fun to try out in the REPL, don't really
-represent indices or ranges which one might be looking for in a real program. Note
+represent indices or ranges which one might be looking for in a real program.  Note
 that if a composite `StringUnit` tries to measure e.g. characters from an invalid
-index, this will throw an error. We felt that cases where this happens are probably
-erroneous, and that it is therefore more helpful to surface the error than to silently
-recalibrate with `thisind` or `nextind`.
+index, this will throw an error, even in the middle of a chain of offsets. We felt
+that cases where this happens are probably erroneous, and that it is therefore more
+helpful to surface the error than to silently recalibrate with `thisind` or
+`nextind`.
 
 This behavior is also an illustration of an advantage which semi-open intervals
 (which imply zero-based indexing, for reasons [Edsger Dijkstra famously

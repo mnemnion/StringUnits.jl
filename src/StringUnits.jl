@@ -35,7 +35,7 @@ end
 """
     GraphemeUnit <: AbstractStringUnit
 
-A unit type representing some number of [`graphemes`]''(@extref `Unicode.graphemes`).
+A unit type representing some number of `graphemes`.
 """
 struct GraphemeUnit <: AbstractStringUnit
     index::Int
@@ -44,7 +44,7 @@ end
 """
     CodeunitUnit <: AbstractStringUnit
 
-A unit type representing a [`textwidth`]''(@extref).
+A unit type representing a `textwidth`.
 """
 struct TextWidthUnit <: AbstractStringUnit
     index::Int
