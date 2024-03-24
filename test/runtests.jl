@@ -1,6 +1,7 @@
 import Base.Unicode: graphemes
-import StringUnits: CharUnit, CharUnitMaker, CodeunitUnit, CodeunitUnitMaker, GraphemeUnit,
-    GraphemeUnitMaker, TextWidthUnit, TextWidthUnitMaker, stringunittype
+import StringUnits: AbstractStringUnit, CharUnit, CharUnitMaker, CodeunitUnit,
+    CodeunitUnitMaker, GraphemeUnit, GraphemeUnitMaker, TextWidthUnit, TextWidthUnitMaker,
+    offsetafter, offsetfrom, stringunittype
 
 using Aqua
 using StringUnits
@@ -28,6 +29,11 @@ using Test
         @test textwidth("👎🏼") == 4  # Ideally, this is also 2
     end
 
+    @testset "Implemenation Criteria" begin
+        struct NewStringUnit <: AbstractStringUnit end
+        @test_throws ErrorException offsetafter("abc", 0, NewStringUnit())
+    end
+
     @testset "Erroneous Arithmetic" begin
         # These operations lack a coherent meaning, so we define them
         # to throw an error
@@ -47,6 +53,8 @@ using Test
         @test_throws ArgumentError 3gr < 4tw
         @test_throws ArgumentError 3gr + 0cu < 4tw
         @test_throws ArgumentError 3gr < 4tw + 0cu
+        @test_throws ArgumentError 1tw + 0cu < 4tw + 18gr
+        @test_throws DomainError 5gr - 6
     end
     @testset "Bounds Errors" begin
         str = "abc"
@@ -87,6 +95,9 @@ using Test
         ref = "😻🫶🏼😸🫶🏼😹🫶🏼";
         @test ref[2ch + 0cu + 0ch + 0gr] == "🫶🏼"
         @test ref[2ch + (0cu + 0ch + 0gr)] == "🫶🏼"
+        @test offsetafter("abc", 3, 0gr) == 3
+        @test_throws StringIndexError offsetafter("αβγ", 2, 2gr)
+        @test offsetfrom("abc", 1cu:2cu) == 1:2
     end
 
     @testset "Comparisons and Identities" begin
@@ -114,6 +125,7 @@ using Test
         @test (1cu + 0gr) + (3cu + 1gr) == 4cu + 1gr
         @test (1tw + 3ch) + (0tw + 4ch) == 1tw + 7ch
         @test (1tw + 1ch) + (1tw + 1ch) == (1tw + 1ch) + (1tw + 1ch)
+        @test (1tw + 5gr) + (3tw + 0gr) == 1tw + 5gr + 3tw
         @test 4gr - 4gr == 0gr
         @test 5ch + (1ch + 1gr) == 6ch + 1gr
         @test 5ch - 4ch == 1ch
@@ -167,6 +179,9 @@ using Test
         @test_throws StringIndexError twref[1ch + 2tw:2ch + 1cu]
         @test length(ref, 5gr, 5gr) == 192
         @test length(ref, 1ch, 4ch) == 4
+        @test length(ref, 1, 4ch) == 4
+        @test length(ref, 1ch, 3) == 2
+        @test view(twref, 1tw:4tw) == "δ🤬w"
         for i in eachindex(ref)
             @test ref[i] == ref[i + 0ch]
             @test length(ref, 1ch, i + 0ch) == length(@view ref[begin:i])
