@@ -176,6 +176,9 @@ using Test
         @test twref[1ch + 2tw + 4cu + 1gr:5gr] == "🤔→"
         @test twref[2ch + 0cu] == 0xf0
         @test twref[2ch + 0cu] isa UInt8
+        bob = "aβcδ∅👨🏻‍🌾!"
+        @test bob[4gr:6gr] == "δ∅👨🏻‍🌾"
+        @test bob[4gr:7gr] == "δ∅👨🏻‍🌾!"
         @test "abcd"[1cu:3] == "abc"
         @test repr(4cu:6ch) == "(4cu + 0ch):(0cu + 6ch)"
         @test "abcd"[5ch:3cu] == ""

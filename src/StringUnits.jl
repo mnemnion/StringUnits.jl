@@ -474,6 +474,9 @@ function indicesfrom(str::AbstractString, range::StringUnitRange{S}) where {S}
         range.stop < range.start && return 1, 0
         start = offsetfrom(str, range.start)
         stop = offsetafter(str, start, range.stop - range.start)
+        if stringunittype(range) <: GraphemeUnit
+            stop = offsetafter(str, stop, zero(GraphemeUnit))
+        end
         return start, stop
     else
         start = offsetfrom(str, range.start)
