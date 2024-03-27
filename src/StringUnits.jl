@@ -219,6 +219,18 @@ function Base.:%(::OffsetStringUnit, b::Integer)
     throw(ArgumentError("Can't take remainder of OffsetStringUnits"))
 end
 
+function Base.in(unit::S, range::StringUnitRange{S}) where {S<:AbstractStringUnit}
+     range.start ≤ unit ≤ range.stop
+end
+
+function Base.in(::SA, ::StringUnitRange{SB}) where {SA<:AbstractStringUnit,SB<:AbstractStringUnit}
+    false
+end
+
+function Base.in(::SU, ::StringUnitRange{SU}) where {SU<:OffsetStringUnit}
+    false
+end
+
 Base.isless(a::SU, b::SU) where {SU<:AbstractStringUnit} = a.index < b.index
 Base.isless(::OffsetStringUnit, ::AbstractStringUnit) = throw(ArgumentError("can't compare lengths for offset string units"))
 Base.isless(::AbstractStringUnit, ::OffsetStringUnit) = throw(ArgumentError("can't compare lengths for offset string units"))
@@ -242,6 +254,8 @@ function Base.zero(::Union{OffsetStringUnit{B,O},Type{OffsetStringUnit{B,O}}}) w
     OffsetStringUnit(zero(B), zero(O))
 end
 Base.typemin(::Union{T,Type{T}}) where {T<:AbstractStringUnit} = zero(T)
+
+Base.length(range::StringUnitRange) = isempty(range) ? 0 : (range.stop - range.start).index + 1
 
 Base.:(:)(a::AbstractStringUnit, b::AbstractStringUnit) = StringUnitRange(a,b)
 Base.:(:)(a::AbstractStringUnit, b::Integer) = StringUnitRange(a,CodeunitUnit(b))
