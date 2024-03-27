@@ -1,7 +1,7 @@
 name = "StringUnits"
 uuid = "aae3921f-be51-4fa0-a720-c5500441fcbd"
 authors = ["Sam Atman <atmanistan@gmail.com> and contributors"]
-version = "0.1.0"
+version = "0.1.1"
 
 [compat]
 Aqua = "0.8"
