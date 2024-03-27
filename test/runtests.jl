@@ -142,6 +142,7 @@ using Test
         @test repr(3 + 1cu + 1gr) == "4cu + 1gr"
         @test repr(1tw + 1gr + 1tw + 1ch) == "1tw + 1gr + 1tw + 1ch"
         @test repr(4tw + 1gr + 3) == "4tw + 4gr"
+        @test repr(1gr:5gr) == "1gr:5gr"
         @test 4tw + 1gr + 3 == 4tw + 4gr
     end
 
@@ -194,12 +195,13 @@ using Test
         @test (3ch ∈ 1ch:5ch) == true
         @test (6tw ∈ 1tw:5tw) == false
         @test (5gr ∈ 5gr:4gr) == false
+        @test (5gr ∈ 1cu:6cu) == false
         @test (3ch ∈ 1ch:5gr) == false
         @test (3ch + 0gr ∈ 1ch:4ch) == false
         @test (3ch + 0gr ∈ 1ch:4ch) == false
         @test (3ch ∈ 1ch:5gr) == false
         @test (3ch + 0 ∈ 1ch:5gr) == false
-        @test (3ch + 0gr ∈ 1ch:5gr) == false
+        @test ((3ch + 1gr) ∈ (1ch:5gr)) == false
     end
 
     @testset "Iteration and Length" begin
