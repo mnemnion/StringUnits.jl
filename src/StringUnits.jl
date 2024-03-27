@@ -223,13 +223,9 @@ function Base.in(unit::S, range::StringUnitRange{S}) where {S<:AbstractStringUni
      range.start ≤ unit ≤ range.stop
 end
 
-function Base.in(::SA, ::StringUnitRange{SB}) where {SA<:AbstractStringUnit,SB<:AbstractStringUnit}
-    false
-end
+Base.in(::SA, ::StringUnitRange{SB}) where {SA<:AbstractStringUnit,SB<:AbstractStringUnit} = false
+Base.in(::SU, ::StringUnitRange{SU}) where {SU<:OffsetStringUnit} = false
 
-function Base.in(::SU, ::StringUnitRange{SU}) where {SU<:OffsetStringUnit}
-    false
-end
 
 Base.isless(a::SU, b::SU) where {SU<:AbstractStringUnit} = a.index < b.index
 Base.isless(::OffsetStringUnit, ::AbstractStringUnit) = throw(ArgumentError("can't compare lengths for offset string units"))
