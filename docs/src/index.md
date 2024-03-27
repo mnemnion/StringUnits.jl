@@ -337,6 +337,55 @@ subclass with a different structure, and adapting `StringUnits` to it, a project
 happen to be working on.  There's some discussion of how to adapt `StringUnits` to a
 custom `AbstractString` subtype in the [docstrings](#Docstrings) section.
 
+## Inclusion
+
+StringUnits can be tested for inclusion.
+
+```jldoctest
+julia> 3gr ∈ 1gr:5gr
+true
+
+julia> 3gr ∈ 1ch:50ch
+false
+
+julia> 3ch ∈ 1cu:50ch
+false
+
+julia> 3ch + 1gr ∈ 1ch+1gr:10ch+3gr
+false
+```
+
+This is also conservative, but will always return a `Bool`.
+
+These behaviors are consistent with Base:
+
+```jldoctest
+julia> 5 ∈ "ab5cd"
+false
+
+julia> 5 < "five"
+MethodError: no method matching isless(::Int64, ::String)
+```
+
+Homogenous `StringUnits` may be iterated:
+
+```jldoctest
+julia> [unit for unit in 1gr:10gr]
+10-element Vector{StringUnits.GraphemeUnit}:
+ 1gr
+ 2gr
+ 3gr
+ 4gr
+ 5gr
+ 6gr
+ 7gr
+ 8gr
+ 9gr
+ 10gr
+ ```
+
+ This will complain about incomparable lengths if tried on ranges where the concept is ill-formed.
+
 ## Miscellaneous
 
 Methods have been implemented for Base functions which are documented to take a string

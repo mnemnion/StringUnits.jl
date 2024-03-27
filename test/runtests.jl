@@ -190,6 +190,23 @@ using Test
         end
     end
 
+    @testset "Inclusion" begin
+        @test (3ch ∈ 1ch:5ch) == true
+        @test (3ch ∈ 1ch:5gr) == false
+        @test (3ch + 0gr ∈ 1ch:4ch) == false
+        @test (3ch + 0gr ∈ 1ch:4ch) == false
+        @test (3ch ∈ 1ch:5gr) == false
+        @test (3ch + 0 ∈ 1ch:5gr) == false
+        @test (3ch + 0gr ∈ 1ch:5gr) == false
+    end
+
+    @testset "Iteration and Length" begin
+        @test length(1gr:10gr) == 10
+        @test_throws ArgumentError length(1gr:10ch)
+        @test [unit for unit = 1gr:10gr] == GraphemeUnit[1gr, 2gr, 3gr, 4gr, 5gr, 6gr, 7gr, 8gr, 9gr, 10gr]
+        @test_throws ArgumentError length(1gr + 0ch:10gr + 0ch)
+    end
+
     @testset "Find previous and next" begin
         ref =  "a👍🏼a👎🏼a👍🏼a👎🏼a"
         ref2 = "a👍a👎a👍a👎a"
