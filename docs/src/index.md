@@ -517,14 +517,8 @@ julia> "१२३४५"[2ch:3ch]
 "२३"
 
 julia> "1︎⃣2︎⃣3︎⃣4︎⃣5︎⃣"[2gr:3gr]
-"2︎⃣3"
-
-julia> length(ans)
-4
+"2︎⃣3︎⃣"
 ```
-
-Threw in the length there to demonstrate that, if the output appears incorrect, this
-is just a rendering bug.
 
 
 ## Docstrings
