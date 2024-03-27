@@ -355,7 +355,9 @@ julia> 3ch + 1gr ∈ 1ch+1gr:10ch+3gr
 false
 ```
 
-This is also conservative, but will always return a `Bool`.
+This is also conservative, but will always return a `Bool`. The philosophy here is
+that a `StringUnitRange` is a range of that unit, not _per se_ a description of a
+section of a given `String`.
 
 These behaviors are consistent with Base:
 
@@ -367,7 +369,9 @@ julia> 5 < "five"
 MethodError: no method matching isless(::Int64, ::String)
 ```
 
-Homogenous `StringUnits` may be iterated:
+Homogenous `StringUnits` may be iterated.  Another description of our implementation
+of `in` is that a given `StringUnit` is in a `StringUnitRange` only if iterating that
+range will produce that unit.
 
 ```jldoctest
 julia> [unit for unit in 1gr:10gr]
@@ -384,7 +388,9 @@ julia> [unit for unit in 1gr:10gr]
  10gr
  ```
 
- This will complain about incomparable lengths if tried on ranges where the concept is ill-formed.
+ This will complain about incomparable lengths if tried on ranges where the concept
+ is ill-formed, there being no way to describe the steps in the range `1cu:5gr` or
+ the many variations like it.
 
 ## Miscellaneous
 

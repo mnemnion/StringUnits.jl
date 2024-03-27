@@ -192,6 +192,8 @@ using Test
 
     @testset "Inclusion" begin
         @test (3ch ∈ 1ch:5ch) == true
+        @test (6tw ∈ 1tw:5tw) == false
+        @test (5gr ∈ 5gr:4gr) == false
         @test (3ch ∈ 1ch:5gr) == false
         @test (3ch + 0gr ∈ 1ch:4ch) == false
         @test (3ch + 0gr ∈ 1ch:4ch) == false
