@@ -366,7 +366,7 @@ julia> 5 ∈ "ab5cd"
 false
 
 julia> 5 < "five"
-MethodError: no method matching isless(::Int64, ::String)
+ERROR: MethodError: no method matching isless(::Int64, ::String)
 ```
 
 Homogenous `StringUnits` may be iterated.  Another description of our implementation
@@ -386,7 +386,7 @@ julia> [unit for unit in 1gr:10gr]
  8gr
  9gr
  10gr
- ```
+```
 
  This will complain about incomparable lengths if tried on ranges where the concept
  is ill-formed, there being no way to describe the steps in the range `1cu:5gr` or
