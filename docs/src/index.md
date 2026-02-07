@@ -157,7 +157,7 @@ julia> 3ch + 4gr + 4ch
 3ch + 4gr + 4ch
 ```
 
-Think of a chain of additions as instructions for finding the associated offset, starting from `[1]`: "forward third characters then four graphemes forward", "forward three characters, forward four characters, forward four graphemes", "forward three characters, forward four graphemes, forward four characters".
+Think of a chain of additions as instructions for finding the associated offset, starting from `[1]`: "forward three characters then four graphemes forward", "forward three characters, forward four characters, forward four graphemes", "forward three characters, forward four graphemes, forward four characters".
 
 You can see that the second of these can be partially elided to "forward seven
 characters", but the latter can't be simplified in the same way.
